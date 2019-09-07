@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+    <script src="js/main.js"></script>
+</head>
+
+<body>
+
+    <script>
+        var config = {
+            type: Phaser.AUTO,
+            width: 600,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+        var game = new Phaser.Game(config);
+
+        
+        // INPUTS
+        var keyUp, keyLeft, keyDown, keyRight;
+
+        // PLAYER
+        var pac;
+        var keyboard;
+        var platforms;
+
+
+        function preload() {
+            this.load.setBaseURL('http://labs.phaser.io');
+            this.load.image('pac', 'http://localhost/prototype-2-phaser/images/pac_1.png');
+            this.load.image('ground', 'http://localhost/prototype-2-phaser/images/ground.png');
+        }
+
+        function create() {
+            keyboard = this.input.keyboard;
+            keyboard.on('keydown_W', GoUp);
+            keyboard.on('keydown_A', GoLeft);
+            keyboard.on('keydown_S', GoDown);
+            keyboard.on('keydown_D', GoRight);
+            
+            keyUp = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+            keyLeft = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+            keyDown = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+            keyRight = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+            
+            
+            pac = this.physics.add.sprite(200, 200, 'pac');
+            pac.setBounce(0, 0);
+            pac.setCollideWorldBounds(true);
+
+            platforms = this.physics.add.staticGroup();
+            platforms.create(400, 400, 'ground');
+            this.physics.add.collider(pac, platforms);
+        }
+
+        function update() {
+            if (!(keyDown.isDown || keyUp.isDown || keyRight.isDown || keyLeft.isDown)) {
+                pac.setVelocity(0, 0);
+            }
+        }
+
+
+
+
+
+
+
+
+
+        // INPUTS
+        function GoUp() {
+            pac.setVelocity(0, -200);
+            pac.angle = 270;
+        }
+        function GoLeft() {
+            pac.setVelocity(-200, 0);
+            pac.angle = 180;
+        }
+        function GoDown() {
+            pac.setVelocity(0, 200);
+            pac.angle = 90;
+        }
+        function GoRight() {
+            pac.setVelocity(200, 0);
+            pac.angle = 0;
+        }
+    </script>
+
+</body>
+
+</html>
