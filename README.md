@@ -1,4 +1,4 @@
-# prototyp-2-phaser
+# Pac-Man-Meets-Dungeons
 
 ## Steps to get the project set up
 1. Install XAMPP (for local server hosting)
