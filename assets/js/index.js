@@ -197,6 +197,7 @@ function create ()
     this.physics.add.collider(player.sprite, layer1);
     this.physics.add.collider(player.sprite, layer2);
     this.physics.add.collider(ghostsGroup, layer1);
+
     this.physics.add.overlap(player.sprite, dots, function(sprite, dot) {
         dot.disableBody(true, true);
         dotsAte++;
