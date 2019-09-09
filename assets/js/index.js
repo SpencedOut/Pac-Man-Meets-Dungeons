@@ -63,7 +63,7 @@ let TIME_MODES = [
     },
     {
         mode: "chase",
-        interval: -1 // -1 = infinite
+        interval: -100 // -1 = infinite
     }
 ];
 let changeModeTimer = 0;
@@ -164,7 +164,7 @@ function create ()
         });
 
     this.anims.create({
-            key: Animation.Ghost.White.Scatter,
+            key: Animation.Ghost.White.Scared,
             frames: [ { key: spritesheet, frame: 2 } ],
             frameRate: 10,
             repeat: -1
@@ -232,6 +232,8 @@ function create ()
         }
     });
 
+    changeModeTimer = this.time.now + TIME_MODES[currentMode].interval;
+
     let ghostsGroup = this.physics.add.group();
     let i=0;
     let skins=[Animation.Ghost.Blue, Animation.Ghost.Red, Animation.Ghost.Orange , Animation.Ghost.Pink];
@@ -293,10 +295,10 @@ function newGame() {
 
 function update()
 {
-    console.log(ghosts[0].mode);
-    console.log(ghosts[0].ghostDestination);
-    console.log(ghosts[0].current);
-    console.log(ghosts[3].mode);
+    // console.log(currentMode);
+    console.log(ghosts[1].ghostDestination);
+    console.log(ghosts[1].current);
+    console.log(ghosts[1].mode);
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
