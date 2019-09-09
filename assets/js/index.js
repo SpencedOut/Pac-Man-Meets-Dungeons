@@ -1,5 +1,9 @@
 import Player  from "./player.js";
 import Ghost  from "./ghost.js";
+
+////////////////////////////// GAME CONFIG
+let powerupDuration = 3000;
+////////////////////////////// GAME CONFIG
         
 let width = 800;
 let height = 625;
@@ -74,6 +78,10 @@ let Animation= {
     }
 };
 
+let nFrames = 0;
+
+let afraidTimerEvent;
+
 function preload ()
 {
     this.load.spritesheet(spritesheet, spritesheetPath, { frameWidth: gridSize, frameHeight: gridSize });
@@ -121,7 +129,7 @@ function create ()
 
     this.anims.create({
             key: Animation.Ghost.White.Move,
-            frames: this.anims.generateFrameNumbers(spritesheet, { start: 4, end: 5 }),
+            frames: this.anims.generateFrameNumbers(spritesheet, { start: 2, end: 3 }),
             frameRate: 10,
             repeat: -1
         });
@@ -207,8 +215,16 @@ function create ()
         }
     }, null, this);
 
+    ////////////////////////////// PICKED UP POWERUP
     this.physics.add.overlap(player.sprite, powers, function(sprite, power) {
         power.disableBody(true, true);
+        
+        // NEW
+        setAfraid(true);
+        afraidTimerEvent = this.time.delayedCall(powerupDuration, function() {
+            setAfraid(false);
+        }, [], this);
+
     }, null, this);
 
     this.physics.add.overlap(player.sprite, ghostsGroup, function(sprite, ghostSprite) {
@@ -261,6 +277,7 @@ function newGame() {
 
 function update()
 {
+
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
@@ -370,4 +387,20 @@ function getTurningPoint(map, sprite) {
 }
 
 
-      
+
+
+
+
+// NEW
+function setAfraid(value) {
+    for(let ghost of ghosts) {
+        ghosts.isAfraid = value;
+        if (value) {
+            ghost.playAnimation(Animation.Ghost.White.Move);
+            ghost.speed = 50;
+        } else {
+            ghost.playAnimation(ghost.anim.Move);
+            ghost.speed = 100;
+        }
+    }
+}

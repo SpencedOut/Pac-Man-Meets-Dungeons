@@ -1,6 +1,6 @@
 export default class Ghost {
     constructor(scene, position, anim)
-    {       
+    {
         this.sprite=scene.physics.add.sprite(position.x, position.y, 'ghost')
             .setScale(0.85)
             .setOrigin(0.5);
@@ -20,7 +20,7 @@ export default class Ghost {
         this.turnCount=0;
         this.turnAtTime=[4, 8, 16, 32, 64];
         this.turnAt=this.rnd.pick(this.turnAtTime);
-        
+        this.isAfraid = false;
     }
 
     freeze() {
@@ -72,10 +72,10 @@ export default class Ghost {
     {
         this.sprite.setVelocity(this.moveTo.x * this.speed,  this.moveTo.y * this.speed);
         this.turn();
-        if(this.directions[this.current] && !this.isSafe(this.directions[this.current].index)) {
-            this.sprite.anims.play('faceRight', true);  
-            this.takeRandomTurn();                  
-        }
+        // if(this.directions[this.current] && !this.isSafe(this.directions[this.current].index)) {
+        //     this.sprite.anims.play('faceRight', true);  
+        //     this.takeRandomTurn();                  
+        // }
     }
 
     setDirections(directions) {
@@ -221,5 +221,9 @@ export default class Ghost {
         graphics.lineStyle(thickness, color, alpha);
         graphics.strokeRect(this.turningPoint.x, this.turningPoint.y, 1, 1);
 
+    }
+
+    playAnimation(clip) {
+        this.sprite.anims.play(clip, true);
     }
 }
