@@ -2,7 +2,8 @@ import Player  from "./player.js";
 import Ghost  from "./ghost.js";
 
 ////////////////////////////// GAME CONFIG
-let powerupDuration = 3000;
+let POWERUP_DURATION = 4000;
+let EAT_PAUSE_DURATION = 500;
 ////////////////////////////// GAME CONFIG
         
 let width = 800;
@@ -78,8 +79,13 @@ let Animation= {
     }
 };
 
-let afraidTimerEvent;
+// NEW
+let timerEvent;
 let isPoweredUp = false;
+let eatTimer;
+
+let isPaused = false;
+let instance;
 
 function preload ()
 {
@@ -93,6 +99,7 @@ function preload ()
 
 function create ()
 {    
+    instance = this;
     this.anims.create({
             key: Animation.Player.Eat,
             frames: this.anims.generateFrameNumbers(spritesheet, { start: 9, end: 13 }),
@@ -188,22 +195,34 @@ function create ()
         }
     });
 
-    let ghostsGroup = this.physics.add.group();
     let i=0;
     let skins=[Animation.Ghost.Blue, Animation.Ghost.Red, Animation.Ghost.Orange , Animation.Ghost.Pink];
      map.filterObjects("Objects", function (value, index, array) {
         if(value.name == "Ghost") {
             let position = new Phaser.Geom.Point(value.x + offset, value.y - offset);
             let ghost = new Ghost(scene, position, skins[i]);
-            ghosts.push(ghost);    
-            ghostsGroup.add(ghost.sprite);
+            ghosts.push(ghost);
             i++;
         }
      });
 
     this.physics.add.collider(player.sprite, layer1);
     this.physics.add.collider(player.sprite, layer2);
-    this.physics.add.collider(ghostsGroup, layer1);
+    for (let ghost of ghosts) {                        // NEW
+        this.physics.add.collider(ghost.sprite, layer1);
+        this.physics.add.overlap(player.sprite, ghost.sprite, function() {
+            if(player.active) {
+                if (isPoweredUp) {
+                    eatGhost(ghost, this);
+                } else {
+                    player.die();
+                    for(let ghost of ghosts) {
+                        ghost.freeze();
+                    }
+                }
+            }
+        }, null, layer1);
+    }
 
     this.physics.add.overlap(player.sprite, dots, function(sprite, dot) {
         dot.disableBody(true, true);
@@ -221,24 +240,11 @@ function create ()
         // NEW
         isPoweredUp = true;
         setAfraid(true);
-        afraidTimerEvent = this.time.delayedCall(powerupDuration, function() {
+        timerEvent = this.time.delayedCall(POWERUP_DURATION, function() {
             setAfraid(false);
             isPoweredUp = false;
         }, [], this);
 
-    }, null, this);
-
-    this.physics.add.overlap(player.sprite, ghostsGroup, function(sprite, ghostSprite) {
-        if(player.active) {
-            if (isPoweredUp) {
-                // ghostSprite.respawn();
-            } else {
-                player.die();
-                for(let ghost of ghosts) {
-                    ghost.freeze();
-                }
-            }
-        }
     }, null, this);
 
     cursors= this.input.keyboard.createCursorKeys();
@@ -282,6 +288,7 @@ function newGame() {
 
 function update()
 {
+    // setAfraid(true);    // DEBUGGING
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
@@ -321,11 +328,16 @@ function update()
         player.setTurn(Phaser.NONE);   
     }
 
-    player.update();  
-
-    for(let ghost of ghosts) {
-        ghost.update();
+    ////////// UPDATE ALL
+    if (!isPaused) {
+        player.update();  
+        for(let ghost of ghosts) {
+            ghost.update();
+        }
+    } else {
+        console.log("Viper");
     }
+    
 
     scoreText.setText('Score: '+player.score);
 
@@ -412,4 +424,10 @@ function setAfraid(value) {
 
 function eatGhost(ghost) {
     ghost.respawn();
+    player.score+=100;
+    isPaused = true;
+    timerEvent = instance.time.delayedCall(EAT_PAUSE_DURATION, function() {
+        isPaused = false;
+        player.playing = true;
+    }, [], this);
 }

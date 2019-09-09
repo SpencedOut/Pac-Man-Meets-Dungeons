@@ -28,6 +28,11 @@ export default class Ghost {
         this.current = Phaser.NONE;
     }
 
+    unfreeze() {
+        this.current = direction;
+        this.move();
+    }
+
     move() {
         this.move(this.rnd.pick([Phaser.UP, Phaser.DOWN]));        
     }
