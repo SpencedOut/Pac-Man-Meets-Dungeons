@@ -78,9 +78,8 @@ let Animation= {
     }
 };
 
-let nFrames = 0;
-
 let afraidTimerEvent;
+let isPoweredUp = false;
 
 function preload ()
 {
@@ -192,7 +191,7 @@ function create ()
     let ghostsGroup = this.physics.add.group();
     let i=0;
     let skins=[Animation.Ghost.Blue, Animation.Ghost.Red, Animation.Ghost.Orange , Animation.Ghost.Pink];
-     map.filterObjects("Objects", function (value, index, array) {        
+     map.filterObjects("Objects", function (value, index, array) {
         if(value.name == "Ghost") {
             let position = new Phaser.Geom.Point(value.x + offset, value.y - offset);
             let ghost = new Ghost(scene, position, skins[i]);
@@ -229,10 +228,14 @@ function create ()
 
     this.physics.add.overlap(player.sprite, ghostsGroup, function(sprite, ghostSprite) {
         if(player.active) {
-            player.die();
-            for(let ghost of ghosts) {
-                ghost.freeze();
-            }   
+            if (isPoweredUp) {
+                // ghostSprite.respawn();
+            } else {
+                player.die();
+                for(let ghost of ghosts) {
+                    ghost.freeze();
+                }
+            }
         }
     }, null, this);
 
@@ -277,7 +280,6 @@ function newGame() {
 
 function update()
 {
-
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
@@ -395,6 +397,7 @@ function getTurningPoint(map, sprite) {
 function setAfraid(value) {
     for(let ghost of ghosts) {
         ghosts.isAfraid = value;
+        isPoweredUp = true;
         if (value) {
             ghost.playAnimation(Animation.Ghost.White.Move);
             ghost.speed = 50;
@@ -403,4 +406,8 @@ function setAfraid(value) {
             ghost.speed = 100;
         }
     }
+}
+
+function eatGhost(ghost) {
+    ghost.respawn();
 }
