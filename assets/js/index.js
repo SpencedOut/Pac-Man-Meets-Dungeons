@@ -219,9 +219,11 @@ function create ()
         power.disableBody(true, true);
         
         // NEW
+        isPoweredUp = true;
         setAfraid(true);
         afraidTimerEvent = this.time.delayedCall(powerupDuration, function() {
             setAfraid(false);
+            isPoweredUp = false;
         }, [], this);
 
     }, null, this);
