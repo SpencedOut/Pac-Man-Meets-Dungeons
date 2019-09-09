@@ -1,10 +1,5 @@
 import Player  from "./player.js";
 import Ghost  from "./ghost.js";
-
-////////////////////////////// GAME CONFIG
-let POWERUP_DURATION = 4000;
-let EAT_PAUSE_DURATION = 500;
-////////////////////////////// GAME CONFIG
         
 let width = 800;
 let height = 625;
@@ -32,9 +27,51 @@ let config = {
 };
 
 let game = new Phaser.Game(config);
+
 let cursors;
 let player;
 let ghosts=[];
+let TIME_MODES = [
+    {
+        mode: "scatter",
+        interval: 7000
+    },
+    {
+        mode: "chase",
+        interval: 20000
+    },
+    {
+        mode: "scatter",
+        interval: 7000
+    },
+    {
+        mode: "chase",
+        interval: 20000
+    },
+    {
+        mode: "scatter",
+        interval: 5000
+    },
+    {
+        mode: "chase",
+        interval: 20000
+    },
+    {
+        mode: "scatter",
+        interval: 5000
+    },
+    {
+        mode: "chase",
+        interval: -1 // -1 = infinite
+    }
+];
+let changeModeTimer = 0;
+let remainingTime = 0;
+let currentMode = 0;
+let isPaused = false;
+let isInkyOut = false;
+let isClydeOut = false;
+let FRIGHTENED_MODE_TIME = 7000;
 let dots;
 let dotsCount=0;
 let dotsAte=0;
@@ -66,7 +103,8 @@ let Animation= {
         },
 
         White : {
-            Move: 'ghost-white-move',
+            Scared: 'ghost-frightened',
+            Return: 'ghost-return',
         },
 
         Pink : {
@@ -78,14 +116,6 @@ let Animation= {
         },
     }
 };
-
-// NEW
-let timerEvent;
-let isPoweredUp = false;
-let eatTimer;
-
-let isPaused = false;
-let instance;
 
 function preload ()
 {
@@ -99,7 +129,6 @@ function preload ()
 
 function create ()
 {    
-    instance = this;
     this.anims.create({
             key: Animation.Player.Eat,
             frames: this.anims.generateFrameNumbers(spritesheet, { start: 9, end: 13 }),
@@ -116,29 +145,36 @@ function create ()
     this.anims.create({
         key: Animation.Player.Die,
         frames: this.anims.generateFrameNumbers(spritesheet, { start: 6, end: 8 }),
-        frameRate: 1
+        frameRate: 5
     });
 
     this.anims.create({
             key: Animation.Ghost.Blue.Move,
-            frames: this.anims.generateFrameNumbers(spritesheet, { start: 0, end: 1 }),
-            frameRate: 10,
-            repeat: -1
-        });
-
-    this.anims.create({
-            key: Animation.Ghost.Orange.Move,
             frames: this.anims.generateFrameNumbers(spritesheet, { start: 4, end: 5 }),
             frameRate: 10,
             repeat: -1
         });
 
     this.anims.create({
-            key: Animation.Ghost.White.Move,
-            frames: this.anims.generateFrameNumbers(spritesheet, { start: 2, end: 3 }),
+            key: Animation.Ghost.Orange.Move,
+            frames: this.anims.generateFrameNumbers(spritesheet, { start: 0, end: 1 }),
             frameRate: 10,
             repeat: -1
         });
+
+    this.anims.create({
+            key: Animation.Ghost.White.Scatter,
+            frames: [ { key: spritesheet, frame: 2 } ],
+            frameRate: 10,
+            repeat: -1
+        });
+
+    this.anims.create({
+        key: Animation.Ghost.White.Return,
+        frames: [ { key: spritesheet, frame: 3 } ],
+        frameRate: 10,
+        repeat: -1
+    });
 
     this.anims.create({
             key: Animation.Ghost.Pink.Move,
@@ -195,57 +231,25 @@ function create ()
         }
     });
 
+    let ghostsGroup = this.physics.add.group();
     let i=0;
     let skins=[Animation.Ghost.Blue, Animation.Ghost.Red, Animation.Ghost.Orange , Animation.Ghost.Pink];
-     map.filterObjects("Objects", function (value, index, array) {
+    let names=["inky", "blinky", "clyde", "pinky"];
+     map.filterObjects("Objects", function (value, index, array) {        
         if(value.name == "Ghost") {
             let position = new Phaser.Geom.Point(value.x + offset, value.y - offset);
-            let ghost = new Ghost(scene, position, skins[i]);
-            ghosts.push(ghost);
+            let ghost = new Ghost(names[i], scene, position, skins[i]);
+            ghosts.push(ghost);    
+            ghostsGroup.add(ghost.sprite);
             i++;
         }
      });
 
+    sendExitOrder(ghosts[3]);
+
     this.physics.add.collider(player.sprite, layer1);
     this.physics.add.collider(player.sprite, layer2);
-    for (let ghost of ghosts) {                        // NEW
-        this.physics.add.collider(ghost.sprite, layer1);
-        this.physics.add.overlap(player.sprite, ghost.sprite, function() {
-            if(player.active) {
-                if (isPoweredUp) {
-                    eatGhost(ghost, this);
-                } else {
-                    player.die();
-                    for(let ghost of ghosts) {
-                        ghost.freeze();
-                    }
-                }
-            }
-        }, null, layer1);
-    }
-
-    this.physics.add.overlap(player.sprite, dots, function(sprite, dot) {
-        dot.disableBody(true, true);
-        dotsAte++;
-        player.score+=10;
-        if(dotsCount==dotsAte) {
-            reset();
-        }
-    }, null, this);
-
-    ////////////////////////////// PICKED UP POWERUP
-    this.physics.add.overlap(player.sprite, powers, function(sprite, power) {
-        power.disableBody(true, true);
-        
-        // NEW
-        isPoweredUp = true;
-        setAfraid(true);
-        timerEvent = this.time.delayedCall(POWERUP_DURATION, function() {
-            setAfraid(false);
-            isPoweredUp = false;
-        }, [], this);
-
-    }, null, this);
+    this.physics.add.collider(ghostsGroup, layer1);
 
     cursors= this.input.keyboard.createCursorKeys();
 
@@ -288,7 +292,6 @@ function newGame() {
 
 function update()
 {
-    // setAfraid(true);    // DEBUGGING
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
@@ -297,15 +300,7 @@ function update()
         }        
     }
 
-    for(let ghost of ghosts) {
-        ghost.setDirections(getDirection(map, layer1, ghost.sprite));
-    }
-
     player.setTurningPoint(getTurningPoint(map, player.sprite));
-
-    for(let ghost of ghosts) {
-        ghost.setTurningPoint(getTurningPoint(map, ghost.sprite));
-    }
 
     if (cursors.left.isDown)
     {
@@ -328,18 +323,219 @@ function update()
         player.setTurn(Phaser.NONE);   
     }
 
-    ////////// UPDATE ALL
-    if (!isPaused) {
-        player.update();  
-        for(let ghost of ghosts) {
-            ghost.update();
-        }
-    } else {
-        console.log("Viper");
-    }
-    
+    player.update();
 
-    scoreText.setText('Score: '+player.score);
+    if(player.active) {
+        if(player.sprite.x < 0 - offset ) {
+            player.sprite.setPosition(width + offset, player.sprite.y);
+        }
+        else if(player.sprite.x> width + offset) {
+            player.sprite.setPosition(0 - offset, player.sprite.y);
+        }
+    }
+
+    this.physics.add.overlap(player.sprite, dots, function(sprite, dot) {
+        dot.disableBody(true, true);
+        dotsAte++;
+        player.score+=10;
+        if(dotsCount==dotsAte) {
+            reset();
+        }
+    }, null, this);
+
+    if (dotsAte > 30 && !isInkyOut) {
+        isInkyOut = true;
+        sendExitOrder(ghosts[0]);
+    }
+
+    if (dotsAte > dotsCount/3*2 && !isClydeOut) {
+        isClydeOut = true;
+        sendExitOrder(ghosts[2]);
+    }
+
+    if (changeModeTimer !== -1 && !isPaused && changeModeTimer < this.time.now) {
+        currentMode++;
+        changeModeTimer = this.time.now + TIME_MODES[currentMode].interval;
+        if (TIME_MODES[currentMode].mode === "chase") {
+            sendAttackOrder();
+        } else {
+            sendScatterOrder();
+        }
+    }
+
+    this.physics.add.overlap(player.sprite, powers, function(sprite, power) {
+        power.disableBody(true, true);
+        for (var i=0; i<ghosts.length; i++) {
+            ghosts[i].enterFrightenedMode();
+        }
+        if (!isPaused) {
+            remainingTime = changeModeTimer - this.time.now;
+        }
+        changeModeTimer = this.time.now + FRIGHTENED_MODE_TIME;
+        isPaused = true;
+    }, null, this);
+
+    if (isPaused && changeModeTimer < this.time.now) {
+        changeModeTimer = this.time.now + remainingTime;
+        isPaused = false;
+        if (TIME_MODES[currentMode].mode === "chase") {
+            sendAttackOrder();
+        } else {
+            sendScatterOrder();
+        }
+    }
+
+    if (dotsCount - dotsAte < 20) {
+        ghosts[1].speed = ghosts[1].cruiseElroySpeed;
+        ghosts[1].mode = ghosts[1].CHASE;
+    }
+
+    for(let ghost of ghosts) {
+        if (ghost.isAttacking && (ghost.mode === ghost.SCATTER || ghost.mode === ghost.CHASE)) {
+            ghost.ghostDestination = getGhostDestination(ghost);
+            ghost.mode = ghost.CHASE;
+        }
+        var currentTile = map.getTileAtWorldXY(ghost.sprite.x, ghost.sprite.y, true);
+        ghost.setDirections(getDirection(map, layer1, ghost.sprite));
+        ghost.findExits();
+        ghost.setTurningPoint(getTurningPoint(map, ghost.sprite));
+        switch (ghost.mode) {
+            case ghost.RANDOM:
+                if (ghost.turnTimer < this.time.now && (ghost.possibleExits.length > 1 || !ghost.canContinue)) {
+                    var select = Math.floor(Math.random() * ghost.possibleExits.length);
+                    var newDirection = ghost.possibleExits[select];
+
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.move(newDirection);
+                    ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
+                }
+                break;
+
+            case ghost.RETURNING_HOME:
+                if (ghost.turnTimer < this.time.now) {
+                    var distanceToObj = 999999;
+                    var direction, decision, bestDecision;
+                    for (var q=0; q<ghost.possibleExits.length; q++) {
+                        direction = ghost.possibleExits[q];
+                        switch (direction) {
+                            case Phaser.LEFT:
+                                decision = new Phaser.Math.Vector2((currentTile.x - 1) * gridSize + offset,
+                                    currentTile.y * gridSize + offset);
+                                break;
+                            case Phaser.RIGHT:
+                                decision = new Phaser.Math.Vector2((currentTile.x + 1) * gridSize + offset,
+                                    currentTile.y * gridSize + offset);
+                                break;
+                            case Phaser.UP:
+                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
+                                    (currentTile.y - 1) * gridSize + offset);
+                                break;
+                            case Phaser.DOWN:
+                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
+                                    (currentTile.y + 1) * gridSize + offset);
+                                break;
+                            default:
+                                break;
+                        }
+                        var dist = ghost.returnDestination.distance(decision);
+                        if (dist < distanceToObj) {
+                            bestDecision = direction;
+                            distanceToObj = dist;
+                        }
+                    }
+
+                    /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                        bestDecision = ghost.current;
+                    } */
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.move(bestDecision);
+                    ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
+                }
+                if (ghost.hasReachedHome()) {
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.mode = ghost.AT_HOME;
+                    this.time.addEvent(Math.random() * 3000, sendExitOrder, this, ghost);
+                }
+                break;
+
+            case ghost.CHASE:
+                if (ghost.turnTimer < this.time.now) {
+                    var distanceToObj = 999999;
+                    var direction, decision, bestDecision;
+                    for (var q=0; q<ghost.possibleExits.length; q++) {
+                        direction = ghost.possibleExits[q];
+                        switch (direction) {
+                            case Phaser.LEFT:
+                                decision = new Phaser.Math.Vector2((currentTile.x - 1) * gridSize + offset,
+                                    currentTile.y * gridSize + offset);
+                                break;
+                            case Phaser.RIGHT:
+                                decision = new Phaser.Math.Vector2((currentTile.x + 1) * gridSize + offset,
+                                    currentTile.y * gridSize + offset);
+                                break;
+                            case Phaser.UP:
+                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
+                                    (currentTile.y - 1) * gridSize + offset);
+                                break;
+                            case Phaser.DOWN:
+                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
+                                    (currentTile.y + 1) * gridSize + offset);
+                                break;
+                            default:
+                                break;
+                        }
+                        var dist = ghost.ghostDestination.distance(decision);
+                        if (dist < distanceToObj) {
+                            bestDecision = direction;
+                            distanceToObj = dist;
+                        }
+                    }
+
+                    /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                        bestDecision = ghost.currentDir;
+                    } */
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.move(bestDecision);
+                    ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
+                }
+                break;
+
+            case ghost.AT_HOME:
+                if (!ghost.canContinue) {
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
+                    ghost.move(dir);
+                } else {
+                    ghost.move(ghost.current);
+                }
+                break;
+
+            case ghost.EXIT_HOME:
+                if (ghost.current !== Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 14)) {
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.move(Phaser.UP);
+                } else if (ghost.current === Phaser.UP && currentTile.y == 11) {
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.mode = getCurrentMode();
+                    return;
+                } else if (!ghost.canContinue) {
+                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
+                    ghost.move(dir);
+                }
+                break;
+
+            case ghost.SCATTER:
+                ghost.ghostDestination = ghost.scatterDestination;
+                ghost.mode = ghost.CHASE;
+                break;
+
+            case ghost.STOP:
+                ghost.move(Phaser.NONE);
+                break;
+        }
+
+    }
 
     for (let i = player.life; i < 3; i++) {
         let image = livesImage[i];
@@ -348,14 +544,23 @@ function update()
         }
     }
 
-    if(player.active) {
-        if(player.sprite.x < 0 - offset ) {            
-            player.sprite.setPosition(width + offset, player.sprite.y);
-        }
-        else if(player.sprite.x> width + offset) {
-            player.sprite.setPosition(0 - offset, player.sprite.y);
-        }
+    for(let ghost of ghosts) {
+        this.physics.add.overlap(player.sprite, ghost.sprite, function(sprite, ghostSprite) {
+            if(player.active && ghost.mode !== ghost.RETURNING_HOME) {
+                if (isPaused)
+                {
+                    ghost.mode = ghost.RETURNING_HOME;
+                    player.score += 100;
+                }
+                else{
+                    player.die();
+                    ghost.freeze();
+                }
+            }
+        }, null, this);
     }
+
+    scoreText.setText('Score: '+player.score);
     
 
     //drawDebug();
@@ -379,6 +584,8 @@ function getDirection(map, layer, sprite) {
         var x = currentTile.x;
         var y = currentTile.y;
 
+        //return a tile or -1
+        directions[Phaser.NONE]     =   map.getTileAt(x, y, true, layer);
         directions[Phaser.LEFT]     =   map.getTileAt(x-1, y, true, layer);
         directions[Phaser.RIGHT]    =   map.getTileAt(x+1, y, true, layer);
         directions[Phaser.UP]       =   map.getTileAt(x, y-1, true, layer);
@@ -402,32 +609,83 @@ function getTurningPoint(map, sprite) {
     return turningPoint;
 }
 
+function getGhostDestination(ghost) {
+    switch (ghost.name) {
+        case "blinky":
+            return new Phaser.Math.Vector2(player.sprite.x, player.sprite.y);
 
+        case "pinky":
+            var dest = new Phaser.Math.Vector2(player.sprite.x, player.sprite.y);
+            var dir = player.current;
+            var offsetX = 0, offsetY = 0;
+            if (dir === Phaser.LEFT || dir === Phaser.RIGHT) {
+                offsetX = (dir === Phaser.RIGHT) ? -4 : 4;
+            }
+            if (dir === Phaser.UP || dir === Phaser.DOWN) {
+                offsetY = (dir === Phaser.DOWN) ? -4 : 4;
+            }
+            offsetX *= gridSize;
+            offsetY *= gridSize;
+            dest.x -= offsetX;
+            dest.y -= offsetY;
+            if (dest.x < offset) dest.x = offset;
+            if (dest.x > width - offset) dest.x = width - offset;
+            if (dest.y < offset) dest.y = offset;
+            if (dest.y > height - offset) dest.y = height - offset;
+            return dest;
 
+        case "inky":
+            var pacmanPos = new Phaser.Math.Vector2(player.sprite.x, player.sprite.y);
+            var blinkyPos = new Phaser.Math.Vector2(ghosts[1].sprite.x, ghosts[1].sprite.y);
+            var diff = pacmanPos.subtract(blinkyPos);
+            var dest = pacmanPos.add(diff);
+            if (dest.x < offset) dest.x = offset;
+            if (dest.x > width - offset) dest.x = width - offset;
+            if (dest.y < offset) dest.y = offset;
+            if (dest.y > height - offset) dest.y = height - offset;
+            return dest;
 
+        case "clyde":
+            var pacmanPos = new Phaser.Math.Vector2(player.sprite.x, player.sprite.y);
+            var clydePos = new Phaser.Math.Vector2(ghosts[2].sprite.x, ghosts[2].sprite.y);
+            if (clydePos.distance(pacmanPos) > 8 * gridSize) {
+                return new Phaser.Geom.Point(pacmanPos.x, pacmanPos.y);
+            } else {
+                return ghost.scatterDestination;
+            }
 
-
-// NEW
-function setAfraid(value) {
-    for(let ghost of ghosts) {
-        ghosts.isAfraid = value;
-        isPoweredUp = true;
-        if (value) {
-            ghost.playAnimation(Animation.Ghost.White.Move);
-            ghost.speed = 50;
-        } else {
-            ghost.playAnimation(ghost.anim.Move);
-            ghost.speed = 100;
-        }
+        default:
+            return ghost.scatterDestination;
     }
 }
 
-function eatGhost(ghost) {
-    ghost.respawn();
-    player.score+=100;
-    isPaused = true;
-    timerEvent = instance.time.delayedCall(EAT_PAUSE_DURATION, function() {
-        isPaused = false;
-        player.playing = true;
-    }, [], this);
+function sendExitOrder(ghost) {
+    ghost.mode = ghost.EXIT_HOME;
 }
+
+function sendScatterOrder() {
+    for (var i=0; i<ghosts.length; i++) {
+        ghosts[i].scatter();
+    }
+}
+
+function sendAttackOrder() {
+    for (var i=0; i<ghosts.length; i++) {
+        ghosts[i].attack();
+    }
+}
+
+function getCurrentMode() {
+    if (!isPaused) {
+        if (TIME_MODES[currentMode].mode === "scatter") {
+            return "scatter";
+        } else {
+            return "chase";
+        }
+    } else {
+        return "random";
+    }
+}
+
+
+      

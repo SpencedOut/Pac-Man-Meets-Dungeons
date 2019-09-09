@@ -1,16 +1,25 @@
 export default class Ghost {
-    constructor(scene, position, anim)
+    constructor(name, scene, position, anim)
     {
+        this.name = name;
         this.sprite=scene.physics.add.sprite(position.x, position.y, 'ghost')
             .setScale(0.85)
             .setOrigin(0.5);
         this.spawnPoint=position;
-        this.anim=anim;      
-        this.speed = 100;
+        this.anim=anim;
+        this.speed = 0;
+        this.ghostSpeed = 100;
+        this.ghostScatterSpeed = 75;
+        this.ghostFrightenedSpeed = 50;
+        this.ghostDestination = new Phaser.Math.Vector2();
+        this.returnDestination = new Phaser.Math.Vector2(12 * 32 + 16, 10 * 32 + 16);
+        this.cruiseElroySpeed = 110;
         this.moveTo = new Phaser.Geom.Point();
+        // empty tile or gate
         this.safetile = [-1, 19];
         this.directions = [];
-        this.opposites = [ null, null, null, null, null, Phaser.DOWN, Phaser.UP, Phaser.RIGHT, Phaser.LEFT ];        
+        // Phaser.left/right/up/down/none = 7/8/5/6/4
+        this.opposites = [ null, null, null, null, Phaser.NONE, Phaser.DOWN, Phaser.UP, Phaser.RIGHT, Phaser.LEFT ];
         this.turning=Phaser.NONE;
         this.current=Phaser.NONE;
         this.turningPoint = new Phaser.Geom.Point();
@@ -20,21 +29,62 @@ export default class Ghost {
         this.turnCount=0;
         this.turnAtTime=[4, 8, 16, 32, 64];
         this.turnAt=this.rnd.pick(this.turnAtTime);
-        this.isAfraid = false;
+        this.turnTimer = 0;
+        this.turning_cooldown = 150;
+        this.returning_cooldown = 100;
+        this.RANDOM     = "random";
+        this.SCATTER    = "scatter";
+        this.CHASE      = "chase";
+        this.STOP       = "stop";
+        this.AT_HOME    = "at_home";
+        this.EXIT_HOME  = "leaving_home";
+        this.RETURNING_HOME = "returning_home";
+        this.isAttacking = false;
+        this.possibleExits = [];
+        this.canContinue;
+        this.mode = this.AT_HOME;
+
+        switch (this.name) {
+            case "clyde":
+                this.scatterDestination = new Phaser.Math.Vector2(0, 17 * 32);
+                break;
+            case "pinky":
+                this.scatterDestination = new Phaser.Math.Vector2(0, 0);
+                break;
+            case "blinky":
+                this.scatterDestination = new Phaser.Math.Vector2(24 * 32, 0);
+                // this.safetiles = [this.game.safetile];
+                this.mode = this.SCATTER;
+                break;
+            case "inky":
+                this.scatterDestination = new Phaser.Math.Vector2(24 * 32, 0);
+                break;
+            default:
+                break;
+        }
+        
+    }
+
+    attack() {
+        if (this.mode !== this.RETURNING_HOME) {
+            this.isAttacking = true;
+            if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
+                this.current = this.opposites[this.current];
+            }
+        }
+    }
+
+    enterFrightenedMode() {
+        if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME && this.mode !== this.RETURNING_HOME) {
+            this.sprite.anims.play('ghost-frightened', true);
+            this.mode = this.RANDOM;
+            this.isAttacking = false;
+        }
     }
 
     freeze() {
         this.moveTo = new Phaser.Geom.Point();
         this.current = Phaser.NONE;
-    }
-
-    unfreeze() {
-        this.current = direction;
-        this.move();
-    }
-
-    move() {
-        this.move(this.rnd.pick([Phaser.UP, Phaser.DOWN]));        
     }
 
     respawn() {       
@@ -43,44 +93,14 @@ export default class Ghost {
         this.sprite.flipX = false;
     }
 
-    moveLeft()
+    findExits()
     {
-        this.moveTo.x=-1;
-        this.moveTo.y=0;
-        this.sprite.flipX = true;
-        this.sprite.angle = 0;
-    }
-
-    moveRight()
-    {
-        this.moveTo.x=1;
-        this.moveTo.y=0;
-        this.sprite.flipX = false;
-        this.sprite.angle = 0;
-    }
-
-    moveUp()
-    {
-        this.moveTo.x=0;
-        this.moveTo.y=-1;
-        this.sprite.angle = 0;
-    }
-
-    moveDown()
-    {
-        this.moveTo.x=0;
-        this.moveTo.y=1;
-        this.sprite.angle = 0;
-    }
-
-    update()
-    {
-        this.sprite.setVelocity(this.moveTo.x * this.speed,  this.moveTo.y * this.speed);
-        this.turn();
-        // if(this.directions[this.current] && !this.isSafe(this.directions[this.current].index)) {
-        //     this.sprite.anims.play('faceRight', true);  
-        //     this.takeRandomTurn();                  
-        // }
+        this.canContinue = this.isSafe(this.directions[this.current].index);
+        for (var q=5; q<this.directions.length; q++) {
+            if (this.isSafe(this.directions[q].index) && q !== this.opposites[this.current]) {
+                this.possibleExits.push(q);
+            }
+        }
     }
 
     setDirections(directions) {
@@ -89,6 +109,11 @@ export default class Ghost {
 
     setTurningPoint(turningPoint) {
         this.turningPoint=turningPoint;
+    }
+
+    setTurnTimer(time)
+    {
+        this.turnTimer = time;
     }
 
 
@@ -114,7 +139,7 @@ export default class Ghost {
         }
     }
 
-    takeRandomTurn() {
+    /* takeRandomTurn() {
 
         let turns = [];
         for (let i=0; i < this.directions.length; i++) {
@@ -122,7 +147,6 @@ export default class Ghost {
             if(direction) {
                 if(this.isSafe(direction.index)) {
                     turns.push(i);
-                    
                 }
             }
         }
@@ -163,29 +187,34 @@ export default class Ghost {
         this.turning = Phaser.NONE;
         this.turningPoint = new Phaser.Geom.Point();
         return true;
-    }
+    } */
 
     move(direction)
     {
-        this.current=direction;
+        this.current = direction;
 
-        switch(direction)
-        {
-            case Phaser.LEFT:
-            this.moveLeft();
-            break;
+        this.speed = this.ghostSpeed;
+        if (this.mode === this.SCATTER) {
+            this.speed = this.ghostScatterSpeed;
+        }
+        if (this.mode === this.RANDOM) {
+            this.speed = this.ghostFrightenedSpeed;
+        } else if (this.mode === this.RETURNING_HOME) {
+            this.speed = this.cruiseElroySpeed;
+        }
 
-            case Phaser.RIGHT:
-            this.moveRight();
-            break;
+        if (this.current === Phaser.NONE) {
+            this.sprite.setVelocity(0, 0);
+            return;
+        }
 
-            case Phaser.UP:
-            this.moveUp();
-            break;
-
-            case Phaser.DOWN:
-            this.moveDown();
-            break;
+        if (direction === Phaser.LEFT || direction === Phaser.UP) {
+            this.speed = -this.speed;
+        }
+        if (direction === Phaser.LEFT || direction === Phaser.RIGHT) {
+            this.sprite.setVelocityX(this.speed);
+        } else if (direction === Phaser.UP || direction === Phaser.DOWN){
+            this.sprite.setVelocityY(this.speed);
         }
     }
 
@@ -195,6 +224,23 @@ export default class Ghost {
         }
 
         return false;
+    }
+
+    hasReachedHome() {
+        if (this.sprite.x < 9 * 32 || this.sprite.x > 16 * 32 ||
+            this.sprite.y < 9 * 32 || this.ghost.y > 11 * 32) {
+            return false;
+        }
+        return true;
+    }
+
+    scatter() {
+        if (this.mode !== this.RETURNING_HOME) {
+            this.isAttacking = false;
+            if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
+                this.mode = this.SCATTER;
+            }
+        }
     }
 
     drawDebug(graphics) 
@@ -226,9 +272,5 @@ export default class Ghost {
         graphics.lineStyle(thickness, color, alpha);
         graphics.strokeRect(this.turningPoint.x, this.turningPoint.y, 1, 1);
 
-    }
-
-    playAnimation(clip) {
-        this.sprite.anims.play(clip, true);
     }
 }

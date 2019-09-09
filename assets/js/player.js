@@ -90,9 +90,6 @@ export default class Player {
     {
         this.sprite.setVelocity(this.moveTo.x * this.speed,  this.moveTo.y * this.speed);
         this.turn();
-        // if(this.directions[this.current] && !this.isSafe(this.directions[this.current].index)) {
-        //     this.sprite.anims.play('faceRight', true);
-        // }
     }
 
     setDirections(directions) {
