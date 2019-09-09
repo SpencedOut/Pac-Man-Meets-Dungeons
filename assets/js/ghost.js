@@ -15,8 +15,10 @@ export default class Ghost {
         this.returnDestination = new Phaser.Math.Vector2(12 * 32 + 16, 10 * 32 + 16);
         this.cruiseElroySpeed = 110;
         this.moveTo = new Phaser.Geom.Point();
+        // empty tile
+        this.safetile = -1;
         // empty tile or gate
-        this.safetile = [-1, 19];
+        this.safetileReturn = [-1, 19];
         this.directions = [];
         // Phaser.left/right/up/down/none = 7/8/5/6/4
         this.opposites = [ null, null, null, null, Phaser.NONE, Phaser.DOWN, Phaser.UP, Phaser.RIGHT, Phaser.LEFT ];
@@ -139,56 +141,6 @@ export default class Ghost {
         }
     }
 
-    /* takeRandomTurn() {
-
-        let turns = [];
-        for (let i=0; i < this.directions.length; i++) {
-            let direction=this.directions[i];
-            if(direction) {
-                if(this.isSafe(direction.index)) {
-                    turns.push(i);
-                }
-            }
-        }
-
-        if(turns.length >= 2) {
-            let index=turns.indexOf(this.opposites[this.current]);
-            if(index>-1) {
-                turns.splice(index, 1);
-            }
-        }
-
-        let turn=this.rnd.pick(turns);       
-        this.setTurn(turn);
-
-        this.turnCount=0;
-        this.turnAt=this.rnd.pick(this.turnAtTime);
-    }
-
-    turn()
-    {
-        if(this.turnCount===this.turnAt) {
-            this.takeRandomTurn();            
-        }                
-        this.turnCount++;
-
-        if(this.turning === Phaser.NONE) {
-            return false;
-        }
-
-        //  This needs a threshold, because at high speeds you can't turn because the coordinates skip past
-        if (!Phaser.Math.Within(this.sprite.x, this.turningPoint.x, this.threshold) || !Phaser.Math.Within(this.sprite.y, this.turningPoint.y, this.threshold))
-        {
-            return false;
-        }        
-        
-        this.sprite.setPosition(this.turningPoint.x, this.turningPoint.y);
-        this.move(this.turning);
-        this.turning = Phaser.NONE;
-        this.turningPoint = new Phaser.Geom.Point();
-        return true;
-    } */
-
     move(direction)
     {
         this.current = direction;
@@ -219,10 +171,14 @@ export default class Ghost {
     }
 
     isSafe(index) {
-        for (let i of this.safetile) {
-            if(i===index) return true;
+        if (this.mode == this.RETURNING_HOME)
+        {
+            for (let i of this.safetileReturn) {
+                if(i===index) return true;
+            }
+        } else {
+            if(index === this.safetile) return true;
         }
-
         return false;
     }
 

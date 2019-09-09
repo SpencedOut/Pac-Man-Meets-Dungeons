@@ -5,6 +5,7 @@ let width = 800;
 let height = 625;
 let gridSize = 32;
 let offset=parseInt(gridSize/2);
+let threshold = 5;
 let config = {
     type: Phaser.AUTO,
     width: width,
@@ -292,6 +293,10 @@ function newGame() {
 
 function update()
 {
+    console.log(ghosts[0].mode);
+    console.log(ghosts[0].ghostDestination);
+    console.log(ghosts[0].current);
+    console.log(ghosts[3].mode);
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
@@ -447,12 +452,12 @@ function update()
                     /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
                         bestDecision = ghost.current;
                     } */
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                     ghost.move(bestDecision);
                     ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
                 }
                 if (ghost.hasReachedHome()) {
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                     ghost.mode = ghost.AT_HOME;
                     this.time.addEvent(Math.random() * 3000, sendExitOrder, this, ghost);
                 }
@@ -494,7 +499,7 @@ function update()
                     /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
                         bestDecision = ghost.currentDir;
                     } */
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                     ghost.move(bestDecision);
                     ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
                 }
@@ -502,7 +507,7 @@ function update()
 
             case ghost.AT_HOME:
                 if (!ghost.canContinue) {
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                     var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
                     ghost.move(dir);
                 } else {
@@ -511,17 +516,19 @@ function update()
                 break;
 
             case ghost.EXIT_HOME:
-                if (ghost.current !== Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 14)) {
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                if (ghost.current !== Phaser.UP && currentTile.x >= 11 && currentTile.x <= 13 && currentTile.y >= 8 && currentTile.y <= 10) {
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                     ghost.move(Phaser.UP);
-                } else if (ghost.current === Phaser.UP && currentTile.y == 11) {
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                } else if (ghost.current !== Phaser.RIGHT && currentTile.x >= 9 && currentTile.x <= 10 && currentTile.y >= 9 && currentTile.y <= 10) {
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.move(Phaser.RIGHT);
+                } else if (ghost.current !== Phaser.LEFT && currentTile.x >= 14 && currentTile.x <= 15 && currentTile.y >= 9 && currentTile.y <= 10) {
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                    ghost.move(Phaser.LEFT);
+                } else if (ghost.current === Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 13) && currentTile.y == 7) {
+                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                     ghost.mode = getCurrentMode();
                     return;
-                } else if (!ghost.canContinue) {
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
-                    ghost.move(dir);
                 }
                 break;
 
@@ -576,14 +583,11 @@ function drawDebug() {
 
 function getDirection(map, layer, sprite) {
     let directions = [];
-    let sx=Phaser.Math.FloorTo(sprite.x);
-    let sy=Phaser.Math.FloorTo(sprite.y);
-    let currentTile = map.getTileAtWorldXY(sx, sy, true);  
-    if(currentTile) {
-
+    let currentTile = map.getTileAtWorldXY(sprite.x, sprite.y, true);
+    if (currentTile)
+    {
         var x = currentTile.x;
         var y = currentTile.y;
-
         //return a tile or -1
         directions[Phaser.NONE]     =   map.getTileAt(x, y, true, layer);
         directions[Phaser.LEFT]     =   map.getTileAt(x-1, y, true, layer);
@@ -598,9 +602,9 @@ function getDirection(map, layer, sprite) {
 
 function getTurningPoint(map, sprite) {
     let turningPoint = new Phaser.Geom.Point();
-    let sx=Phaser.Math.FloorTo(sprite.x);
-    let sy=Phaser.Math.FloorTo(sprite.y);
-    let currentTile = map.getTileAtWorldXY(sx, sy, true);  
+    //let sx=Phaser.Math.FloorTo(sprite.x);
+    //let sy=Phaser.Math.FloorTo(sprite.y);
+    let currentTile = map.getTileAtWorldXY(sprite.x, sprite.y, true);
     if(currentTile) {    
         turningPoint.x = currentTile.pixelX + offset;
         turningPoint.y = currentTile.pixelY + offset;
@@ -686,6 +690,3 @@ function getCurrentMode() {
         return "random";
     }
 }
-
-
-      
