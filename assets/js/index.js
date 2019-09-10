@@ -55,7 +55,7 @@ let TIME_MODES = [
     },
     {
         mode: "chase",
-        interval: 20000
+        interval: 200000
     },
     {
         mode: "scatter",
@@ -63,7 +63,7 @@ let TIME_MODES = [
     },
     {
         mode: "chase",
-        interval: -1 // -1 = infinite
+        interval: -1
     }
 ];
 let changeModeTimer = 0;
@@ -198,7 +198,7 @@ function create ()
     layer1.setCollisionByProperty({ collides: true});
 
     // place player in the scene
-    let spawnPoint = map.findObject("Objects", obj => obj.name === "Player");  
+    let spawnPoint = map.findObject("Objects", obj => obj.name == "Player");
     let position = new Phaser.Geom.Point(spawnPoint.x + offset, spawnPoint.y - offset);
     player = new Player(this, position, Animation.Player, function() {
         if(player.life <= 0) {
@@ -288,41 +288,19 @@ function newGame() {
 
 function update()
 {
-    console.log(ghosts[0].mode);
-    console.log(ghosts[0].ghostDestination);
-    console.log(ghosts[0].current);
-    console.log(ghosts[3].mode);
-    player.setDirections(getDirection(map, layer1, player.sprite));
+    //console.log(ghosts[0].mode);
+    //console.log(ghosts[0].ghostDestination);
+    //console.log(ghosts[3].current);
+    //console.log(ghosts[3].mode);
 
     if(!player.playing) {
         for(let ghost of ghosts) {
             ghost.freeze();
-        }        
+        }
     }
-
+    player.setDirections(getDirection(map, layer1, player.sprite));
     player.setTurningPoint(getTurningPoint(map, player.sprite));
-
-    if (cursors.left.isDown)
-    {
-        player.setTurn(Phaser.LEFT);
-    }
-    else if (cursors.right.isDown)
-    {
-        player.setTurn(Phaser.RIGHT);
-    }   
-    else if (cursors.up.isDown)
-    {
-        player.setTurn(Phaser.UP);
-    }
-    else if (cursors.down.isDown)
-    {
-        player.setTurn(Phaser.DOWN);
-    }
-    else
-    {
-        player.setTurn(Phaser.NONE);   
-    }
-
+    player.checkKeys(cursors);
     player.update();
 
     if(player.active) {
@@ -353,10 +331,10 @@ function update()
         sendExitOrder(ghosts[2]);
     }
 
-    if (changeModeTimer !== -1 && !isPaused && changeModeTimer < this.time.now) {
+    if (TIME_MODES[currentMode].interval !== -1 && !isPaused && changeModeTimer < this.time.now) {
         currentMode++;
         changeModeTimer = this.time.now + TIME_MODES[currentMode].interval;
-        if (TIME_MODES[currentMode].mode === "chase") {
+        if (TIME_MODES[currentMode].mode == "chase") {
             sendAttackOrder();
         } else {
             sendScatterOrder();
@@ -382,7 +360,7 @@ function update()
         ghosts[1].sprite.anims.play('ghost-red-move', true);
         ghosts[2].sprite.anims.play('ghost-orange-move', true);
         ghosts[3].sprite.anims.play('ghost-pink-move', true);
-        if (TIME_MODES[currentMode].mode === "chase") {
+        if (TIME_MODES[currentMode].mode == "chase") {
             sendAttackOrder();
         } else {
             sendScatterOrder();
@@ -395,7 +373,7 @@ function update()
     }
 
     for(let ghost of ghosts) {
-        if (ghost.isAttacking && (ghost.mode === ghost.SCATTER || ghost.mode === ghost.CHASE)) {
+        if (ghost.isAttacking && (ghost.mode == ghost.SCATTER || ghost.mode == ghost.CHASE)) {
             ghost.ghostDestination = getGhostDestination(ghost);
             ghost.mode = ghost.CHASE;
         }
@@ -455,7 +433,7 @@ function update()
                                 default:
                                     break;
                             }
-                            var dist = ghost.returnDestination.distance(decision);
+                            var dist = ghost.returnDestinationreturnDestination.distance(decision);
                             if (dist < distanceToObj) {
                                 bestDecision = direction;
                                 distanceToObj = dist;
@@ -530,9 +508,9 @@ function update()
                     break;
 
                 case ghost.AT_HOME:
-                    if (!ghost.canContinue) {
+                    if (!canContinue) {
                         ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                        var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
+                        var dir = (ghost.current == Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
                         ghost.move(dir);
                     } else {
                         ghost.move(ghost.current);
@@ -549,7 +527,7 @@ function update()
                     } else if (ghost.current !== Phaser.LEFT && currentTile.x >= 14 && currentTile.x <= 15 && currentTile.y >= 9 && currentTile.y <= 10) {
                         ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                         ghost.move(Phaser.LEFT);
-                    } else if (ghost.current === Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 13) && currentTile.y == 7) {
+                    } else if (ghost.current == Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 13) && currentTile.y == 7) {
                         ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
                         ghost.mode = getCurrentMode();
                         return;
@@ -566,6 +544,7 @@ function update()
                     break;
             }
         }
+        //ghost.drawDebug(graphics);
     }
 
     for (let i = player.life; i < 3; i++) {
@@ -645,11 +624,11 @@ function getGhostDestination(ghost) {
             var dest = new Phaser.Math.Vector2(player.sprite.x, player.sprite.y);
             var dir = player.current;
             var offsetX = 0, offsetY = 0;
-            if (dir === Phaser.LEFT || dir === Phaser.RIGHT) {
-                offsetX = (dir === Phaser.RIGHT) ? -4 : 4;
+            if (dir == Phaser.LEFT || dir == Phaser.RIGHT) {
+                offsetX = (dir == Phaser.RIGHT) ? -4 : 4;
             }
             if (dir === Phaser.UP || dir === Phaser.DOWN) {
-                offsetY = (dir === Phaser.DOWN) ? -4 : 4;
+                offsetY = (dir == Phaser.DOWN) ? -4 : 4;
             }
             offsetX *= gridSize;
             offsetY *= gridSize;
@@ -704,7 +683,7 @@ function sendAttackOrder() {
 
 function getCurrentMode() {
     if (!isPaused) {
-        if (TIME_MODES[currentMode].mode === "scatter") {
+        if (TIME_MODES[currentMode].mode == "scatter") {
             return "scatter";
         } else {
             return "chase";
