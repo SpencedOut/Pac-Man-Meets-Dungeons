@@ -59,7 +59,6 @@ export default class Player {
         this.moveTo.x=-1;
         this.moveTo.y=0;
         this.sprite.anims.play(this.anim.Eat, true);
-        this.sprite.angle = 180;
     }
 
     moveRight()
@@ -67,7 +66,6 @@ export default class Player {
         this.moveTo.x=1;
         this.moveTo.y=0;
         this.sprite.anims.play(this.anim.Eat, true);
-        this.sprite.angle = 0;
     }
 
     moveUp()
@@ -75,7 +73,6 @@ export default class Player {
         this.moveTo.x=0;
         this.moveTo.y=-1;
         this.sprite.anims.play(this.anim.Eat, true);
-        this.sprite.angle = 270;
     }
 
     moveDown()
@@ -83,12 +80,12 @@ export default class Player {
         this.moveTo.x=0;
         this.moveTo.y=1;
         this.sprite.anims.play(this.anim.Eat, true);
-        this.sprite.angle = 90;
     }
 
     update()
     {
         this.sprite.setVelocity(this.moveTo.x * this.speed,  this.moveTo.y * this.speed);
+        this.sprite.angle = this.getDirection(this.moveTo.x, this.moveTo.y) * 180 / 3.14159;
         this.turn();
         // if(this.directions[this.current] && !this.isSafe(this.directions[this.current].index)) {
         //     this.sprite.anims.play('faceRight', true);
@@ -203,5 +200,9 @@ export default class Player {
         graphics.lineStyle(thickness, color, alpha);
         graphics.strokeRect(this.turningPoint.x, this.turningPoint.y, 1, 1);
 
+    }
+
+    getDirection(x, y) {
+        return Phaser.Math.Angle.Between(0, 0, x, y);
     }
 }

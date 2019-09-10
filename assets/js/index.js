@@ -327,16 +327,6 @@ function update()
     {
         player.setTurn(Phaser.NONE);   
     }
-
-    ////////// UPDATE ALL
-    if (!isPaused) {
-        player.update();  
-        for(let ghost of ghosts) {
-            ghost.update();
-        }
-    } else {
-        console.log("Viper");
-    }
     
 
     scoreText.setText('Score: '+player.score);
