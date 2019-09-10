@@ -79,7 +79,6 @@ let dotsAte=0;
 let powers;
 let map;
 let layer1;
-let layer2;
 let graphics;
 let scoreText;
 let livesImage=[];
@@ -198,10 +197,6 @@ function create ()
     layer1 = map.createStaticLayer("Layer 1", tileset, 0, 0);
     layer1.setCollisionByProperty({ collides: true});
 
-    // layer for the gate
-    layer2 = map.createStaticLayer("Layer 2", tileset, 0, 0);
-    layer2.setCollisionByProperty({ collides: true});
-
     // place player in the scene
     let spawnPoint = map.findObject("Objects", obj => obj.name === "Player");  
     let position = new Phaser.Geom.Point(spawnPoint.x + offset, spawnPoint.y - offset);
@@ -249,7 +244,6 @@ function create ()
     sendExitOrder(ghosts[3]);
 
     this.physics.add.collider(player.sprite, layer1);
-    this.physics.add.collider(player.sprite, layer2);
     this.physics.add.collider(ghostsGroup, layer1);
 
     cursors= this.input.keyboard.createCursorKeys();

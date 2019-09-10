@@ -106,28 +106,6 @@ export default class Ghost {
     }
 
 
-    setTurn(turnTo)
-    {
-        if (!this.directions[turnTo] 
-            || this.turning === turnTo 
-            || this.current === turnTo 
-            || !this.isSafe(this.directions[turnTo].index)
-            ) {
-            return false;
-        }
-
-        //console.log("turning:"+this.turning+" current:"+this.current+" turnTo:"+turnTo);
-
-        if(this.opposites[turnTo] && this.opposites[turnTo] === this.current) {
-            this.move(turnTo);
-            this.turning = Phaser.NONE;
-            this.turningPoint = new Phaser.Geom.Point();
-        }
-        else {
-            this.turning = turnTo;
-        }
-    }
-
     move(direction)
     {
         this.current = direction;
@@ -158,7 +136,7 @@ export default class Ghost {
     }
 
     isSafe(index) {
-        if (this.mode == this.RETURNING_HOME)
+        if (this.mode == this.RETURNING_HOME && this.mode == this.EXIT_HOME)
         {
             for (let i of this.safetileReturn) {
                 if(i===index) return true;
@@ -171,7 +149,7 @@ export default class Ghost {
 
     hasReachedHome() {
         if (this.sprite.x < 9 * 32 || this.sprite.x > 16 * 32 ||
-            this.sprite.y < 9 * 32 || this.ghost.y > 11 * 32) {
+            this.sprite.y < 9 * 32 || this.sprite.y > 11 * 32) {
             return false;
         }
         return true;
