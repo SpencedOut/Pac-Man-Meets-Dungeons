@@ -163,7 +163,7 @@ function create ()
         });
 
     this.anims.create({
-            key: Animation.Ghost.White.Scatter,
+            key: Animation.Ghost.White.Scared,
             frames: [ { key: spritesheet, frame: 2 } ],
             frameRate: 10,
             repeat: -1
@@ -242,6 +242,7 @@ function create ()
      });
 
     sendExitOrder(ghosts[3]);
+    ghosts[1].mode = getCurrentMode();
 
     this.physics.add.collider(player.sprite, layer1);
     this.physics.add.collider(ghostsGroup, layer1);
@@ -377,6 +378,10 @@ function update()
     if (isPaused && changeModeTimer < this.time.now) {
         changeModeTimer = this.time.now + remainingTime;
         isPaused = false;
+        ghosts[0].sprite.anims.play('ghost-blue-move', true);
+        ghosts[1].sprite.anims.play('ghost-red-move', true);
+        ghosts[2].sprite.anims.play('ghost-orange-move', true);
+        ghosts[3].sprite.anims.play('ghost-pink-move', true);
         if (TIME_MODES[currentMode].mode === "chase") {
             sendAttackOrder();
         } else {
@@ -466,6 +471,21 @@ function update()
                     }
                     if (ghost.hasReachedHome()) {
                         ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        switch(ghost.name)
+                        {
+                            case "blinky":
+                                ghost.sprite.anims.play("ghost-red-move", true);
+                                break;
+                            case "inky":
+                                ghost.sprite.anims.play("ghost-blue-move", true);
+                                break;
+                            case "pinky":
+                                ghost.sprite.anims.play("ghost-pink-move", true);
+                                break;
+                            case "clyde":
+                                ghost.sprite.anims.play("ghost-orange-move", true);
+                                break;
+                        }
                         ghost.mode = ghost.AT_HOME;
                         this.time.addEvent(Math.random() * 3000, sendExitOrder, this, ghost);
                     }
@@ -560,6 +580,7 @@ function update()
             if (player.active && ghost.mode !== ghost.RETURNING_HOME) {
                 if (isPaused) {
                     ghost.mode = ghost.RETURNING_HOME;
+                    ghost.sprite.anims.play('ghost-return', true);
                     player.score += 100;
                 } else {
                     player.die();
