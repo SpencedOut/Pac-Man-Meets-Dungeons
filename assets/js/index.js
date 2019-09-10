@@ -327,7 +327,15 @@ function update()
     {
         player.setTurn(Phaser.NONE);   
     }
+
+    console.log(player.sprite.x + "|" + player.sprite.y);   // Debugging
     
+
+    player.update();
+    for (let ghost of ghosts) {
+        ghost.update();
+    }
+
 
     scoreText.setText('Score: '+player.score);
 

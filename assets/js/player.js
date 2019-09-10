@@ -2,7 +2,7 @@ export default class Player {
     constructor(scene, position, anim, dieCallback)
     {       
         this.sprite=scene.physics.add.sprite(position.x, position.y, 'pacman')
-            .setScale(0.9)
+            .setScale(0.5)
             .setOrigin(0.5);
         this.spawnPoint=position;
         this.anim=anim;        
@@ -26,6 +26,9 @@ export default class Player {
             ref.animComplete(animation, frame);
         }, scene);
         this.playing = false;
+
+        // Testing
+        this.sprite.scale = 0.8;
     }
 
     die() {
