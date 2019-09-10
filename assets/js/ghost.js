@@ -42,8 +42,6 @@ export default class Ghost {
         this.EXIT_HOME  = "leaving_home";
         this.RETURNING_HOME = "returning_home";
         this.isAttacking = false;
-        this.possibleExits = [];
-        this.canContinue;
         this.mode = this.AT_HOME;
 
         switch (this.name) {
@@ -55,7 +53,6 @@ export default class Ghost {
                 break;
             case "blinky":
                 this.scatterDestination = new Phaser.Math.Vector2(24 * 32, 0);
-                // this.safetiles = [this.game.safetile];
                 this.mode = this.SCATTER;
                 break;
             case "inky":
@@ -93,16 +90,6 @@ export default class Ghost {
         this.sprite.setPosition(this.spawnPoint.x, this.spawnPoint.y);
         this.move(this.rnd.pick([Phaser.UP, Phaser.DOWN]));
         this.sprite.flipX = false;
-    }
-
-    findExits()
-    {
-        this.canContinue = this.isSafe(this.directions[this.current].index);
-        for (var q=5; q<this.directions.length; q++) {
-            if (this.isSafe(this.directions[q].index) && q !== this.opposites[this.current]) {
-                this.possibleExits.push(q);
-            }
-        }
     }
 
     setDirections(directions) {

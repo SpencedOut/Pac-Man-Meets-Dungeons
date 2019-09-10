@@ -63,7 +63,7 @@ let TIME_MODES = [
     },
     {
         mode: "chase",
-        interval: -100 // -1 = infinite
+        interval: -1 // -1 = infinite
     }
 ];
 let changeModeTimer = 0;
@@ -164,7 +164,7 @@ function create ()
         });
 
     this.anims.create({
-            key: Animation.Ghost.White.Scared,
+            key: Animation.Ghost.White.Scatter,
             frames: [ { key: spritesheet, frame: 2 } ],
             frameRate: 10,
             repeat: -1
@@ -232,8 +232,6 @@ function create ()
         }
     });
 
-    changeModeTimer = this.time.now + TIME_MODES[currentMode].interval;
-
     let ghostsGroup = this.physics.add.group();
     let i=0;
     let skins=[Animation.Ghost.Blue, Animation.Ghost.Red, Animation.Ghost.Orange , Animation.Ghost.Pink];
@@ -295,10 +293,10 @@ function newGame() {
 
 function update()
 {
-    // console.log(currentMode);
-    console.log(ghosts[1].ghostDestination);
-    console.log(ghosts[1].current);
-    console.log(ghosts[1].mode);
+    console.log(ghosts[0].mode);
+    console.log(ghosts[0].ghostDestination);
+    console.log(ghosts[0].current);
+    console.log(ghosts[3].mode);
     player.setDirections(getDirection(map, layer1, player.sprite));
 
     if(!player.playing) {
@@ -402,166 +400,174 @@ function update()
             ghost.ghostDestination = getGhostDestination(ghost);
             ghost.mode = ghost.CHASE;
         }
-        var currentTile = map.getTileAtWorldXY(ghost.sprite.x, ghost.sprite.y, true);
-        ghost.setDirections(getDirection(map, layer1, ghost.sprite));
-        ghost.findExits();
-        ghost.setTurningPoint(getTurningPoint(map, ghost.sprite));
-        switch (ghost.mode) {
-            case ghost.RANDOM:
-                if (ghost.turnTimer < this.time.now && (ghost.possibleExits.length > 1 || !ghost.canContinue)) {
-                    var select = Math.floor(Math.random() * ghost.possibleExits.length);
-                    var newDirection = ghost.possibleExits[select];
-
-                    ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.move(newDirection);
-                    ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
+        let sx = Math.floor(ghost.sprite.x);
+        let sy = Math.floor(ghost.sprite.y);
+        let currentTile = map.getTileAtWorldXY(sx, sy, true);
+        if (Phaser.Math.Within(currentTile.pixelX + offset, ghost.sprite.x, threshold) &&
+            Phaser.Math.Within(currentTile.pixelY + offset, ghost.sprite.y, threshold))
+        {
+            var x = currentTile.x;
+            var y = currentTile.y;
+            ghost.turningPoint.x = currentTile.pixelX + offset;
+            ghost.turningPoint.y = currentTile.pixelY + offset;
+            //return a tile or -1
+            ghost.directions[Phaser.NONE] = map.getTileAt(x, y, true, layer1);
+            ghost.directions[Phaser.LEFT] = map.getTileAt(x - 1, y, true, layer1);
+            ghost.directions[Phaser.RIGHT] = map.getTileAt(x + 1, y, true, layer1);
+            ghost.directions[Phaser.UP] = map.getTileAt(x, y - 1, true, layer1);
+            ghost.directions[Phaser.DOWN] = map.getTileAt(x, y + 1, true, layer1);
+            var canContinue = ghost.isSafe(ghost.directions[ghost.current].index);
+            var possibleExits = [];
+            for (var q = 5; q < ghost.directions.length; q++) {
+                if (ghost.isSafe(ghost.directions[q].index) && q !== ghost.opposites[ghost.current]) {
+                    possibleExits.push(q);
                 }
-                break;
-
-            case ghost.RETURNING_HOME:
-                if (ghost.turnTimer < this.time.now) {
-                    var distanceToObj = 999999;
-                    var direction, decision, bestDecision;
-                    for (var q=0; q<ghost.possibleExits.length; q++) {
-                        direction = ghost.possibleExits[q];
-                        switch (direction) {
-                            case Phaser.LEFT:
-                                decision = new Phaser.Math.Vector2((currentTile.x - 1) * gridSize + offset,
-                                    currentTile.y * gridSize + offset);
-                                break;
-                            case Phaser.RIGHT:
-                                decision = new Phaser.Math.Vector2((currentTile.x + 1) * gridSize + offset,
-                                    currentTile.y * gridSize + offset);
-                                break;
-                            case Phaser.UP:
-                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
-                                    (currentTile.y - 1) * gridSize + offset);
-                                break;
-                            case Phaser.DOWN:
-                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
-                                    (currentTile.y + 1) * gridSize + offset);
-                                break;
-                            default:
-                                break;
-                        }
-                        var dist = ghost.returnDestination.distance(decision);
-                        if (dist < distanceToObj) {
-                            bestDecision = direction;
-                            distanceToObj = dist;
-                        }
+            }
+            switch (ghost.mode) {
+                case ghost.RANDOM:
+                    if (ghost.turnTimer < this.time.now && (possibleExits.length > 1 || !canContinue)) {
+                        var select = Math.floor(Math.random() * possibleExits.length);
+                        var newDirection = possibleExits[select];
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.move(newDirection);
+                        ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
                     }
+                    break;
 
-                    /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
-                        bestDecision = ghost.current;
-                    } */
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.move(bestDecision);
-                    ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
-                }
-                if (ghost.hasReachedHome()) {
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.mode = ghost.AT_HOME;
-                    this.time.addEvent(Math.random() * 3000, sendExitOrder, this, ghost);
-                }
-                break;
+                case ghost.RETURNING_HOME:
+                    if (ghost.turnTimer < this.time.now) {
+                        var distanceToObj = 999999;
+                        var direction, decision, bestDecision;
+                        for (var q = 0; q < possibleExits.length; q++) {
+                            direction = possibleExits[q];
+                            switch (direction) {
+                                case Phaser.LEFT:
+                                    decision = new Phaser.Math.Vector2((x - 1) * gridSize + offset, y * gridSize + offset);
+                                    break;
+                                case Phaser.RIGHT:
+                                    decision = new Phaser.Math.Vector2((x + 1) * gridSize + offset, y * gridSize + offset);
+                                    break;
+                                case Phaser.UP:
+                                    decision = new Phaser.Math.Vector2(x * gridSize + offset, (y - 1) * gridSize + offset);
+                                    break;
+                                case Phaser.DOWN:
+                                    decision = new Phaser.Math.Vector2(x * gridSize + offset, (y + 1) * gridSize + offset);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            var dist = ghost.returnDestination.distance(decision);
+                            if (dist < distanceToObj) {
+                                bestDecision = direction;
+                                distanceToObj = dist;
+                            }
+                        }
 
-            case ghost.CHASE:
-                if (ghost.turnTimer < this.time.now) {
-                    var distanceToObj = 999999;
-                    var direction, decision, bestDecision;
-                    for (var q=0; q<ghost.possibleExits.length; q++) {
-                        direction = ghost.possibleExits[q];
-                        switch (direction) {
-                            case Phaser.LEFT:
-                                decision = new Phaser.Math.Vector2((currentTile.x - 1) * gridSize + offset,
-                                    currentTile.y * gridSize + offset);
-                                break;
-                            case Phaser.RIGHT:
-                                decision = new Phaser.Math.Vector2((currentTile.x + 1) * gridSize + offset,
-                                    currentTile.y * gridSize + offset);
-                                break;
-                            case Phaser.UP:
-                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
-                                    (currentTile.y - 1) * gridSize + offset);
-                                break;
-                            case Phaser.DOWN:
-                                decision = new Phaser.Math.Vector2(currentTile.x * gridSize + offset,
-                                    (currentTile.y + 1) * gridSize + offset);
-                                break;
-                            default:
-                                break;
-                        }
-                        var dist = ghost.ghostDestination.distance(decision);
-                        if (dist < distanceToObj) {
-                            bestDecision = direction;
-                            distanceToObj = dist;
-                        }
+                        /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                            bestDecision = ghost.current;
+                        } */
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.move(bestDecision);
+                        ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
                     }
+                    if (ghost.hasReachedHome()) {
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.mode = ghost.AT_HOME;
+                        this.time.addEvent(Math.random() * 3000, sendExitOrder, this, ghost);
+                    }
+                    break;
 
-                    /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
-                        bestDecision = ghost.currentDir;
-                    } */
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.move(bestDecision);
-                    ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
-                }
-                break;
+                case ghost.CHASE:
+                    if (ghost.turnTimer < this.time.now) {
+                        var distanceToObj = 999999;
+                        var direction, decision, bestDecision;
+                        for (var q = 0; q < possibleExits.length; q++) {
+                            direction = possibleExits[q];
+                            switch (direction) {
+                                case Phaser.LEFT:
+                                    decision = new Phaser.Math.Vector2((x - 1) * gridSize + offset, y * gridSize + offset);
+                                    break;
+                                case Phaser.RIGHT:
+                                    decision = new Phaser.Math.Vector2((x + 1) * gridSize + offset, y * gridSize + offset);
+                                    break;
+                                case Phaser.UP:
+                                    decision = new Phaser.Math.Vector2(x * gridSize + offset, (y - 1) * gridSize + offset);
+                                    break;
+                                case Phaser.DOWN:
+                                    decision = new Phaser.Math.Vector2(x * gridSize + offset, (y + 1) * gridSize + offset);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            var dist = ghost.ghostDestination.distance(decision);
+                            if (dist < distanceToObj) {
+                                bestDecision = direction;
+                                distanceToObj = dist;
+                            }
+                        }
 
-            case ghost.AT_HOME:
-                if (!ghost.canContinue) {
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
-                    ghost.move(dir);
-                } else {
-                    ghost.move(ghost.current);
-                }
-                break;
+                        /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                            bestDecision = ghost.currentDir;
+                        } */
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.move(bestDecision);
+                        ghost.setTurnTimer(this.time.now + ghost.turning_cooldown);
+                    }
+                    break;
 
-            case ghost.EXIT_HOME:
-                if (ghost.current !== Phaser.UP && currentTile.x >= 11 && currentTile.x <= 13 && currentTile.y >= 8 && currentTile.y <= 10) {
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.move(Phaser.UP);
-                } else if (ghost.current !== Phaser.RIGHT && currentTile.x >= 9 && currentTile.x <= 10 && currentTile.y >= 9 && currentTile.y <= 10) {
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.move(Phaser.RIGHT);
-                } else if (ghost.current !== Phaser.LEFT && currentTile.x >= 14 && currentTile.x <= 15 && currentTile.y >= 9 && currentTile.y <= 10) {
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.move(Phaser.LEFT);
-                } else if (ghost.current === Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 13) && currentTile.y == 7) {
-                    // ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
-                    ghost.mode = getCurrentMode();
-                    return;
-                }
-                break;
+                case ghost.AT_HOME:
+                    if (!ghost.canContinue) {
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        var dir = (ghost.current === Phaser.LEFT) ? Phaser.RIGHT : Phaser.LEFT;
+                        ghost.move(dir);
+                    } else {
+                        ghost.move(ghost.current);
+                    }
+                    break;
 
-            case ghost.SCATTER:
-                ghost.ghostDestination = ghost.scatterDestination;
-                ghost.mode = ghost.CHASE;
-                break;
+                case ghost.EXIT_HOME:
+                    if (ghost.current !== Phaser.UP && currentTile.x >= 11 && currentTile.x <= 13 && currentTile.y >= 8 && currentTile.y <= 10) {
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.move(Phaser.UP);
+                    } else if (ghost.current !== Phaser.RIGHT && currentTile.x >= 9 && currentTile.x <= 10 && currentTile.y >= 9 && currentTile.y <= 10) {
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.move(Phaser.RIGHT);
+                    } else if (ghost.current !== Phaser.LEFT && currentTile.x >= 14 && currentTile.x <= 15 && currentTile.y >= 9 && currentTile.y <= 10) {
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.move(Phaser.LEFT);
+                    } else if (ghost.current === Phaser.UP && (currentTile.x >= 11 || currentTile.x <= 13) && currentTile.y == 7) {
+                        ghost.sprite.setPosition(ghost.turningPoint.x, ghost.turningPoint.y);
+                        ghost.mode = getCurrentMode();
+                        return;
+                    }
+                    break;
 
-            case ghost.STOP:
-                ghost.move(Phaser.NONE);
-                break;
+                case ghost.SCATTER:
+                    ghost.ghostDestination = ghost.scatterDestination;
+                    ghost.mode = ghost.CHASE;
+                    break;
+
+                case ghost.STOP:
+                    ghost.move(Phaser.NONE);
+                    break;
+            }
         }
-
     }
 
     for (let i = player.life; i < 3; i++) {
         let image = livesImage[i];
-        if(image) {
-            image.alpha=0;
+        if (image) {
+            image.alpha = 0;
         }
     }
 
-    for(let ghost of ghosts) {
-        this.physics.add.overlap(player.sprite, ghost.sprite, function(sprite, ghostSprite) {
-            if(player.active && ghost.mode !== ghost.RETURNING_HOME) {
-                if (isPaused)
-                {
+    for (let ghost of ghosts) {
+        this.physics.add.overlap(player.sprite, ghost.sprite, function (sprite, ghostSprite) {
+            if (player.active && ghost.mode !== ghost.RETURNING_HOME) {
+                if (isPaused) {
                     ghost.mode = ghost.RETURNING_HOME;
                     player.score += 100;
-                }
-                else{
+                } else {
                     player.die();
                     ghost.freeze();
                 }
@@ -570,7 +576,6 @@ function update()
     }
 
     scoreText.setText('Score: '+player.score);
-    
 
     //drawDebug();
 }
@@ -585,7 +590,9 @@ function drawDebug() {
 
 function getDirection(map, layer, sprite) {
     let directions = [];
-    let currentTile = map.getTileAtWorldXY(sprite.x, sprite.y, true);
+    let sx = Math.floor(sprite.x);
+    let sy = Math.floor(sprite.y);
+    let currentTile = map.getTileAtWorldXY(sx, sy, true);
     if (currentTile)
     {
         var x = currentTile.x;
@@ -596,7 +603,6 @@ function getDirection(map, layer, sprite) {
         directions[Phaser.RIGHT]    =   map.getTileAt(x+1, y, true, layer);
         directions[Phaser.UP]       =   map.getTileAt(x, y-1, true, layer);
         directions[Phaser.DOWN]     =   map.getTileAt(x, y+1, true, layer);
-
     }
 
     return directions;
@@ -604,9 +610,9 @@ function getDirection(map, layer, sprite) {
 
 function getTurningPoint(map, sprite) {
     let turningPoint = new Phaser.Geom.Point();
-    //let sx=Phaser.Math.FloorTo(sprite.x);
-    //let sy=Phaser.Math.FloorTo(sprite.y);
-    let currentTile = map.getTileAtWorldXY(sprite.x, sprite.y, true);
+    let sx = Math.floor(sprite.x);
+    let sy = Math.floor(sprite.y);
+    let currentTile = map.getTileAtWorldXY(sx, sy, true);
     if(currentTile) {    
         turningPoint.x = currentTile.pixelX + offset;
         turningPoint.y = currentTile.pixelY + offset;
