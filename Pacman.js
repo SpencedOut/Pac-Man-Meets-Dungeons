@@ -175,7 +175,8 @@ Pacman.prototype.eatPill = function(pacman, pill) {
 Pacman.prototype.pickupKey = function(pacman, key) {
     key.kill();
     this.game.numKeysLeft--;
-    console.log(this.game.numKeysLeft);
+    console.log(this.game.numKeysLeft + " keys left");
+    this.game.showNextKey(key.key);
 }
 
 Pacman.prototype.turn = function () {

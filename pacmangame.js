@@ -102,7 +102,6 @@ PacmanGame.prototype = {
         //this.load.crossOrigin = 'anonymous';
 
         this.load.image('dot', 'assets/dot.png');
-        this.load.image("pill", "assets/pill16.png");
         this.load.image('tiles', 'assets/pacman-tiles2.png');
         this.load.spritesheet('pacman', 'assets/pacman.png', 32, 32);
         this.load.spritesheet("ghosts", "assets/ghosts32.png", 32, 32);
@@ -112,6 +111,7 @@ PacmanGame.prototype = {
         this.load.image('key_red', 'assets/pickups/key_red.png');
         this.load.image('key_blue', 'assets/pickups/key_blue.png');
         this.load.image('key_green', 'assets/pickups/key_green.png');
+        this.load.image('sword', 'assets/pickups/sword.png')
 
 
         //  Needless to say, the beast was stoned... and the graphics are Namco (C)opyrighted
@@ -128,32 +128,25 @@ PacmanGame.prototype = {
         this.TOTAL_DOTS = this.numDots;
         
         this.pills = this.add.physicsGroup();
-        this.numPills = this.map.createFromTiles(40, this.safetile, "pill", this.layer, this.pills);
+        this.numPills = this.map.createFromTiles(40, this.safetile, "sword", this.layer, this.pills);
+        this.pills.setAll('x', this.KEY_X_CORRECTION, false, false, 1);
+        this.pills.setAll('y', this.KEY_Y_CORRECTION, false, false, 1);
 
-        
-        // TEMP: Not efficient, but works
-        // this.keys = this.add.physicsGroup();
-        // this.numKeysLeft = this.map.objects.Keys.length;
-        
-        // this.add.image(this.map.objects.Keys[0].x, this.map.objects.Keys[0].y, 'key_yellow', 1, this.keys);
-        // this.add.image(this.map.objects.Keys[1].x, this.map.objects.Keys[1].y, 'key_red', 2, this.keys);
-        // this.add.image(this.map.objects.Keys[2].x, this.map.objects.Keys[2].y, 'key_blue', 3, this.keys);
-        // this.add.image(this.map.objects.Keys[3].x, this.map.objects.Keys[3].y, 'key_green', 0, this.keys);
-        
-        // this.keys.setAll('x', this.KEY_X_CORRECTION, false, false, 1);
-        // this.keys.setAll('y', this.KEY_Y_CORRECTION, false, false, 1);
+
 
         this.keys = this.add.physicsGroup();
+        this.numKeysLeft = this.map.createFromTiles(46, this.safetile, "key_yellow", this.layer, this.keys);
         this.numKeysLeft = this.map.createFromTiles(48, this.safetile, "key_red", this.layer, this.keys);
         this.numKeysLeft = this.map.createFromTiles(47, this.safetile, "key_blue", this.layer, this.keys);
-        this.numKeysLeft = this.map.createFromTiles(46, this.safetile, "key_yellow", this.layer, this.keys);
         this.numKeysLeft = this.map.createFromTiles(45, this.safetile, "key_green", this.layer, this.keys);
         this.numKeysLeft = this.map.objects.Keys.length;
         this.keys.setAll('x', this.KEY_X_CORRECTION, false, false, 1);
         this.keys.setAll('y', this.KEY_Y_CORRECTION, false, false, 1);
 
         
-
+        for (var i = 1, len = this.keys.children.length; i < len; i++) {
+            this.keys.children[i].exists = false;
+        }
 
 
 
@@ -376,7 +369,27 @@ PacmanGame.prototype = {
         for (var i=0; i<this.ghosts.length; i++) {
             this.ghosts[i].scatter();
         }
+    },
+
+    showNextKey: function(keyName) {
+        // 2013
+        switch (keyName) {
+            case 'key_yellow':
+                this.keys.getChildAt(1).exists = true;
+                break;
+            case 'key_red':
+                this.keys.getChildAt();
+                this.keys.getChildAt(2).exists = true;
+                break;
+            case 'key_blue':
+                this.keys.getChildAt();
+                this.keys.getChildAt(3).exists = true;
+                break;
+            default:
+                break;
+        }
     }
 };
 
 game.state.add('Game', PacmanGame, true);
+
