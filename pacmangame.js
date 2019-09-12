@@ -112,9 +112,12 @@ PacmanGame.prototype = {
         this.load.image('key_blue', 'assets/pickups/key_blue.png');
         this.load.image('key_green', 'assets/pickups/key_green.png');
         this.load.image('sword', 'assets/pickups/sword.png')
+        
+        this.load.spritesheet('hero-right', 'assets/hero/pax-right.png', 32, 32);
+        this.load.spritesheet('hero-left', 'assets/hero/pax-left.png', 32, 32);
+        this.load.spritesheet('hero-right-armed', 'assets/hero/pax-right-armed.png', 32, 32);
+        this.load.spritesheet('hero-left-armed', 'assets/hero/pax-left-armed.png', 32, 32);
 
-
-        //  Needless to say, the beast was stoned... and the graphics are Namco (C)opyrighted
     },
 
     create: function () {

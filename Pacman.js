@@ -23,12 +23,18 @@ var Pacman = function(game, key) {
     
     this.keyPressTimer = 0;
     this.KEY_COOLING_DOWN_TIME = 750;
+
+
+    // NEW SPRITES AND ANIMATIONS
+    this.sprite = this.game.add.sprite((14 * 16) + 8, (17 * 16) + 8, 'hero-left', 0);
     
     //  Position Pacman at grid location 14x17 (the +8 accounts for his anchor)
-    this.sprite = this.game.add.sprite((14 * 16) + 8, (17 * 16) + 8, key, 0);
+    // this.sprite = this.game.add.sprite((14 * 16) + 8, (17 * 16) + 8, key, 0);
     this.sprite.anchor.setTo(0.5);
-    this.sprite.animations.add('munch', [0, 1, 2, 1], 20, true);
-    this.sprite.animations.add("death", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 10, false);
+    // this.sprite.animations.add('munch', [0, 1, 2, 1], 20, true);
+    // this.sprite.animations.add("death", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 10, false);
+
+
     
     this.game.physics.arcade.enable(this.sprite);
     this.sprite.body.setSize(16, 16, 0, 0);
@@ -61,19 +67,15 @@ Pacman.prototype.move = function(direction) {
 
     //  Reset the scale and angle (Pacman is facing to the right in the sprite sheet)
     this.sprite.scale.x = 1;
-    this.sprite.angle = 0;
-
-    if (direction === Phaser.LEFT)
-    {
-        this.sprite.scale.x = -1;
-    }
-    else if (direction === Phaser.UP)
-    {
-        this.sprite.angle = 270;
-    }
-    else if (direction === Phaser.DOWN)
-    {
-        this.sprite.angle = 90;
+    switch(direction) {
+        case Phaser.LEFT:
+            break;
+        case Phaser.RIGHT:
+            break;
+        case Phaser.UP:
+            break;
+        case Phaser.DOWN:
+            break;
     }
 
     this.current = direction;
