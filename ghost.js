@@ -473,7 +473,7 @@ Ghost.prototype = {
         if (dir === Phaser.LEFT || dir === Phaser.UP) speed = -speed;
         if (dir === Phaser.LEFT && !this.game.isPaused) {
             this.ghost.animations.play("left");
-            console.log(this.name + "animation left");
+            // console.log(this.name + "animation left");
         } else if (dir === Phaser.RIGHT && !this.game.isPaused) {
             this.ghost.animations.play("right");
         } else if (dir === Phaser.UP && !this.game.isPaused && this.lastDirection === Phaser.LEFT) {
@@ -485,7 +485,7 @@ Ghost.prototype = {
         } else if (dir === Phaser.DOWN && !this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
             this.ghost.animations.play("right");
         } else if (dir === Phaser.LEFT && this.mode == this.RANDOM) {
-            console.log(this.name + "frightened left");
+            // console.log(this.name + "frightened left");
             this.ghost.animations.play("frightened left");
         } else if (dir === Phaser.RIGHT && this.mode == this.RANDOM) {
             this.ghost.animations.play("frightened right");

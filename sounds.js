@@ -13,7 +13,7 @@ var Sounds = function(game) {
 
 Sounds.prototype.loadAllSounds = function() {
     this.game.load.audio('bgm', 'assets/audio/bgm.wav');
-    this.game.load.audio('bgm-attack', 'assets/audio/bgm-attack.wav');
+    this.game.load.audio('bgm-attack', 'assets/audio/bgm-attack2.wav');
     this.game.load.audio('enemy-death', 'assets/audio/enemy-death.wav');
     this.game.load.audio('player-death', 'assets/audio/player-death.wav');
     this.game.load.audio('player-pickup-key', 'assets/audio/player-pickup-key.wav');
