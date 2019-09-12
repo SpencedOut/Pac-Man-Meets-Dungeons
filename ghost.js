@@ -3,8 +3,6 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.key  = key;
     this.name = name;
     
-    this.ORIGINAL_OVERFLOW_ERROR_ON = this.game.ORIGINAL_OVERFLOW_ERROR_ON;
-    
     this.gridsize = this.game.gridsize;
     this.safetiles = this.game.safetile;
     this.startDir = startDir;
@@ -272,6 +270,22 @@ Ghost.prototype = {
                         this.ghost.y = this.turnPoint.y;
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
                         this.move(Phaser.LEFT);
+                    } else if (x === 9 && this.currentDir === Phaser.DOWN) {
+                        this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
+                        this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
+                        this.ghost.x = this.turnPoint.x;
+                        this.ghost.y = this.turnPoint.y;
+                        this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
+                        this.move(Phaser.DOWN);
+                    } else if (x === 9 && this.currentDir === Phaser.UP) {
+                        this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
+                        this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
+                        this.ghost.x = this.turnPoint.x;
+                        this.ghost.y = this.turnPoint.y;
+                        this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
+                        this.move(Phaser.RIGHT);
+                    } else {
+                        this.move(this.currentDir);
                     }
                     break;
                     
@@ -322,7 +336,7 @@ Ghost.prototype = {
     },
     
     attack: function() {
-        if (this.mode !== this.RETURNING_HOME) {
+        if (!this.game.pacman.isDead && this.mode !== this.RETURNING_HOME) {
             this.isAttacking = true;
             this.ghost.animations.play(this.currentDir);
             if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
@@ -362,9 +376,6 @@ Ghost.prototype = {
                 }
                 if (dir === Phaser.UP || dir === Phaser.DOWN) {
                     offsetY = (dir === Phaser.DOWN) ? -4 : 4;
-                    if (dir === Phaser.UP && this.ORIGINAL_OVERFLOW_ERROR_ON) {
-                        offsetX = 4;
-                    }
                 }
                 offsetX *= this.gridsize;
                 offsetY *= this.gridsize;
@@ -431,7 +442,7 @@ Ghost.prototype = {
             this.ghost.animations.play(dir);
             if (this.name === "blinky" && this.game.numDots < 3) {
                 speed = this.cruiseElroySpeed;
-                this.mode = this.CHASE;   
+                // this.mode = this.CHASE;
             }
         }
         
@@ -451,12 +462,35 @@ Ghost.prototype = {
     },
     
     scatter: function() {
-        if (this.mode !== this.RETURNING_HOME) {
+        if (!this.game.pacman.isDead && this.mode !== this.RETURNING_HOME) {
             this.ghost.animations.play(this.currentDir);
             this.isAttacking = false;
             if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
                 this.mode = this.SCATTER;
             }
         }
+    },
+
+    respawn: function() {
+        this.isAttacking = false;
+        this.ghost.x = this.startPos.x * this.gridsize + this.gridsize/2;
+        this.ghost.y = this.startPos.y * this.gridsize + this.gridsize/2;
+        this.ghost.body.reset(this.startPos.x * this.gridsize + this.gridsize/2, this.startPos.y * this.gridsize + this.gridsize/2);
+        this.currentDir = this.startDir;
+        if (this.name === "blinky") this.mode = this.SCATTER;
+        else {
+            this.mode = this.AT_HOME;
+            this.game.gimeMeExitOrder(this);
+        }
+    },
+
+    restart: function() {
+        this.isAttacking = false;
+        this.ghost.x = this.startPos.x * this.gridsize + this.gridsize/2;
+        this.ghost.y = this.startPos.y * this.gridsize + this.gridsize/2;
+        this.ghost.body.reset(this.startPos.x * this.gridsize + this.gridsize/2, this.startPos.y * this.gridsize + this.gridsize/2);
+        this.currentDir = this.startDir;
+        if (this.name === "blinky") this.mode = this.SCATTER;
+        else this.mode = this.AT_HOME;
     }
 };
