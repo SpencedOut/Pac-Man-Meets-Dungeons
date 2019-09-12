@@ -160,6 +160,7 @@ Pacman.prototype.eatDot = function(pacman, key) {
     
     this.game.score ++;
     this.game.numKeys --;
+    this.game.sound.playPickupKey();
     if (this.game.numKeys > 0)
         this.game.keys.getChildAt(4 - this.game.numKeys).revive();
 };
@@ -170,7 +171,8 @@ Pacman.prototype.eatPill = function(pacman, pill) {
     this.game.score ++;
     this.game.numPills --;
 
-    h=this.sprite.play('armed');
+    this.sprite.play('armed');
+    this.game.sound.playBgmAttack();
     this.game.enterFrightenedMode();
 };
 

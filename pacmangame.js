@@ -94,6 +94,7 @@ PacmanGame.prototype = {
         Phaser.Canvas.setImageRenderingCrisp(this.game.canvas); // full retro mode, i guess ;)
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
+        this.sound = new Sounds(this);
     },
 
     preload: function () {
@@ -107,10 +108,12 @@ PacmanGame.prototype = {
         this.load.tilemap('map', 'assets/level1.json', null, Phaser.Tilemap.TILED_JSON);
         this.load.spritesheet('hero', 'assets/hero/pax.png', 32, 32);
         this.load.spritesheet('monster', 'assets/monsters/zombie_sheet.png', 32, 32);
+        this.sound.loadAllSounds();
 
     },
 
     create: function () {
+        this.sound.createAllInstances();
         this.map = this.add.tilemap('map');
         this.map.addTilesetImage('tile32', 'tiles');
 
@@ -167,6 +170,7 @@ PacmanGame.prototype = {
         this.ghosts.push(this.clyde, this.pinky, this.inky, this.blinky);
         
         this.gimeMeExitOrder(this.pinky);
+        this.sound.playBgm();
     },
 
     update: function () {
@@ -327,6 +331,7 @@ PacmanGame.prototype = {
             this.ghosts[i].respawn();
         }
         this.pacman.respawn();
+        this.sound.playBgm();
     },
 
     checkKeys: function () {
@@ -351,6 +356,7 @@ PacmanGame.prototype = {
 
     dogEatsDog: function(pacman, ghost) {
         if (this.isPaused) {
+            this.sound.playKillEnemy();
             this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
             this[ghost.name].ghostDestination = new Phaser.Point(14 * this.gridsize, 14 * this.gridsize);
             this.score += 10;
@@ -385,6 +391,7 @@ PacmanGame.prototype = {
     killPacman: function() {
         this.pacman.isDead = true;
         this.pacman.life --;
+        this.sound.playPlayerDeath();
         this.stopGhosts();
         // console.log("wait a sec");
         this.game.time.events.add(1500, function() {
@@ -436,6 +443,7 @@ PacmanGame.prototype = {
         }
         this.gimeMeExitOrder(this.pinky);
         this.pacman.respawn();
+        this.sound.playBgm();
     }
 
 };
