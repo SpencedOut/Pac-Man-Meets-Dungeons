@@ -3,8 +3,10 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.key  = key;
     this.name = name;
     
+    this.ORIGINAL_OVERFLOW_ERROR_ON = this.game.ORIGINAL_OVERFLOW_ERROR_ON;
+    
     this.gridsize = this.game.gridsize;
-    this.safetiles = [this.game.safetile];
+    this.safetiles = this.game.safetile;
     this.startDir = startDir;
     this.startPos = startPos;
     this.threshold = 6;
@@ -23,12 +25,14 @@ var Ghost = function(game, key, name, startPos, startDir) {
     
     this.mode = this.AT_HOME;
     this.scatterDestination = new Phaser.Point(18 * this.gridsize, 20 * this.gridsize);
+    this.returnDestination = new Phaser.Point(9 * this.gridsize, 10 * this.gridsize);
     
     this.ghostSpeed = 150;
     this.ghostScatterSpeed = 125;
     this.ghostFrightenedSpeed = 75;
     this.cruiseElroySpeed = 160;
     this.directions = [ null, null, null, null, null ];
+    // Phaser.none/left/right/up/down = 0/1/2/3/4
     this.opposites = [ Phaser.NONE, Phaser.RIGHT, Phaser.LEFT, Phaser.DOWN, Phaser.UP ];
     this.currentDir = startDir;
     
@@ -48,7 +52,6 @@ var Ghost = function(game, key, name, startPos, startDir) {
         case "blinky":
             offsetGhost = 12;
             this.scatterDestination = new Phaser.Point(18 * this.gridsize, 0);
-            this.safetiles = [this.game.safetile];
             this.mode = this.SCATTER;
             break;
             
@@ -72,16 +75,15 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.ghost.play(startDir);
     
     this.game.physics.arcade.enable(this.ghost);
-    this.ghost.body.setSize(this.gridsize, this.gridsize, 0, 0);
+    this.ghost.body.setSize(32, 32, 0, 0);
     
     this.move(startDir);
 };
 
 Ghost.prototype = {
     update: function() {
-        if (this.mode !== this.RETURNING_HOME) {
-            this.game.physics.arcade.collide(this.ghost, this.game.layer);
-        }
+
+        this.game.physics.arcade.collide(this.ghost, this.game.layer);
         
         var x = this.game.math.snapToFloor(Math.floor(this.ghost.x), this.gridsize) / this.gridsize;
         var y = this.game.math.snapToFloor(Math.floor(this.ghost.y), this.gridsize) / this.gridsize;
@@ -94,6 +96,7 @@ Ghost.prototype = {
         }
         
         if (this.isAttacking && (this.mode === this.SCATTER || this.mode === this.CHASE)) {
+            // console.log(this.name + " start attack");
             this.ghostDestination = this.getGhostDestination();
             this.mode = this.CHASE;
         }
@@ -101,12 +104,15 @@ Ghost.prototype = {
         if (this.game.math.fuzzyEqual((x * this.gridsize) + (this.gridsize /2), this.ghost.x, this.threshold) &&
            this.game.math.fuzzyEqual((y * this.gridsize) + (this.gridsize /2), this.ghost.y, this.threshold)) {
             //  Update our grid sensors
+            // console.log(this.name + " facing " + this.currentDir);
+            // console.log(this.name + " is " + this.mode);
             this.directions[0] = this.game.map.getTile(x, y, this.game.layer);
             this.directions[1] = this.game.map.getTileLeft(this.game.layer.index, x, y) || this.directions[1];
             this.directions[2] = this.game.map.getTileRight(this.game.layer.index, x, y) || this.directions[2];
             this.directions[3] = this.game.map.getTileAbove(this.game.layer.index, x, y) || this.directions[3];
             this.directions[4] = this.game.map.getTileBelow(this.game.layer.index, x, y) || this.directions[4];
-            
+            // console.log(this.directions[this.currentDir]);
+
             var canContinue = this.checkSafetile(this.directions[this.currentDir].index);
             var possibleExits = [];
             for (var q=1; q<this.directions.length; q++) {
@@ -114,6 +120,7 @@ Ghost.prototype = {
                     possibleExits.push(q);
                 }
             }
+            // console.log(possibleExits);
             switch (this.mode) {
                 case this.RANDOM:
                     if (this.turnTimer < this.game.time.time && (possibleExits.length > 1 || !canContinue)) {
@@ -137,29 +144,54 @@ Ghost.prototype = {
                     
                 case this.RETURNING_HOME:
                     if (this.turnTimer < this.game.time.time) {
-                        this.ghost.body.reset(this.ghost.x, this.ghost.y);
-                        if (this.flag = this.flag ? false : true) {
-                            this.ghost.body.velocity.x = 0;
-                            if (this.ghost.y < 10 * this.gridsize) {
-                                this.ghost.body.velocity.y = this.cruiseElroySpeed;
-                                this.ghost.animations.play(23);
+                        var distanceToObj = 999999;
+                        var direction, decision, bestDecision;
+                        for (q=0; q<possibleExits.length; q++) {
+                            direction = possibleExits[q];
+                            switch (direction) {
+                                case Phaser.LEFT:
+                                    decision = new Phaser.Point((x-1)*this.gridsize + (this.gridsize/2),
+                                        (y * this.gridsize) + (this.gridsize / 2));
+                                    break;
+                                case Phaser.RIGHT:
+                                    decision = new Phaser.Point((x+1)*this.gridsize + (this.gridsize/2),
+                                        (y * this.gridsize) + (this.gridsize / 2));
+                                    break;
+                                case Phaser.UP:
+                                    decision = new Phaser.Point(x * this.gridsize + (this.gridsize/2),
+                                        ((y-1)*this.gridsize) + (this.gridsize / 2));
+                                    break;
+                                case Phaser.DOWN:
+                                    decision = new Phaser.Point(x * this.gridsize + (this.gridsize/2),
+                                        ((y+1)*this.gridsize) + (this.gridsize / 2));
+                                    break;
+                                default:
+                                    break;
                             }
-                            if (this.ghost.y > 10 * this.gridsize) {
-                                this.ghost.body.velocity.y  = -this.cruiseElroySpeed;
-                                this.ghost.animations.play(22);
-                            }
-                        } else {
-                            this.ghost.body.velocity.y = 0;
-                            if (this.ghost.x < 8 * this.gridsize) {
-                                this.ghost.body.velocity.x = this.cruiseElroySpeed;
-                                this.ghost.animations.play(20);
-                            }
-                            if (this.ghost.x > 10 * this.gridsize) {
-                                this.ghost.body.velocity.x = -this.cruiseElroySpeed;
-                                this.ghost.animations.play(21);
+                            var dist = this.returnDestination.distance(decision);
+                            if (dist < distanceToObj) {
+                                bestDecision = direction;
+                                distanceToObj = dist;
                             }
                         }
-                        this.turnTimer = this.game.time.time + this.RETURNING_COOLDOWN;
+
+                        if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                            bestDecision = this.currentDir;
+                        }
+
+                        this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
+                        this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
+
+                        // snap to grid exact position before turning
+                        this.ghost.x = this.turnPoint.x;
+                        this.ghost.y = this.turnPoint.y;
+
+                        this.lastPosition = { x: x, y: y };
+
+                        this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
+                        this.move(bestDecision);
+
+                        this.turnTimer = this.game.time.time + this.TURNING_COOLDOWN;
                     }
                     if (this.hasReachedHome()) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
@@ -226,14 +258,14 @@ Ghost.prototype = {
                     break;
                     
                 case this.AT_HOME:
-                    if (x == 8) {
+                    if (x === 8 && this.currentDir !== Phaser.RIGHT) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
                         this.ghost.x = this.turnPoint.x;
                         this.ghost.y = this.turnPoint.y;
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
                         this.move(Phaser.RIGHT);
-                    } else if (x == 10) {
+                    } else if (x === 10 && this.currentDir !== Phaser.LEFT) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
                         this.ghost.x = this.turnPoint.x;
@@ -244,30 +276,28 @@ Ghost.prototype = {
                     break;
                     
                 case this.EXIT_HOME:
-                    if (x == 8) {
+                    if (x === 8 && this.currentDir !== Phaser.LEFT) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
                         this.ghost.x = this.turnPoint.x;
                         this.ghost.y = this.turnPoint.y;
-                        this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);                        
+                        this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
                         this.move(Phaser.LEFT);
-                    } else if (x == 10) {
+                    } else if (x === 10 && this.currentDir !== Phaser.RIGHT) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
                         this.ghost.x = this.turnPoint.x;
                         this.ghost.y = this.turnPoint.y;
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
                         this.move(Phaser.RIGHT);
-                    } else if (x == 9) {
-                        var select = Math.floor(Math.random() * possibleExits.length);
-                        var newDirection = possibleExits[select];
+                    } else if (x === 9 && this.currentDir !== Phaser.UP) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
                         this.ghost.x = this.turnPoint.x;
                         this.ghost.y = this.turnPoint.y;
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
-                        this.move(newDirection);
-                    } else if (x == 6 && y == 10 || x == 12 && y == 10 || x == 9 && y == 8 || x == 9 && y == 12) {
+                        this.move(Phaser.UP);
+                    } else if (x === 6 && y === 10 || x === 12 && y === 10 || x === 9 && y === 8 || x === 9 && y === 12) {
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
                         this.ghost.x = this.turnPoint.x;
@@ -275,10 +305,11 @@ Ghost.prototype = {
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
                         this.mode = this.game.getCurrentMode();
                         return;
-                    }
+                    } 
                     break;
                     
                 case this.SCATTER:
+                    // console.log(this.name + " start scatter");
                     this.ghostDestination = new Phaser.Point(this.scatterDestination.x, this.scatterDestination.y);
                     this.mode = this.CHASE;
                     break;
@@ -294,7 +325,7 @@ Ghost.prototype = {
         if (this.mode !== this.RETURNING_HOME) {
             this.isAttacking = true;
             this.ghost.animations.play(this.currentDir);
-            if (this.mode !== this.AT_HOME && this.mode != this.EXIT_HOME) {
+            if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
                 this.currentDir = this.opposites[this.currentDir];
             }
         }
@@ -302,7 +333,7 @@ Ghost.prototype = {
     
     checkSafetile: function(tileIndex) {
         for (var q=0; q<this.safetiles.length; q++) {
-            if (this.safetiles[q] == tileIndex) {
+            if (this.safetiles[q] === tileIndex) {
                 return true;
             }
         }
@@ -331,6 +362,9 @@ Ghost.prototype = {
                 }
                 if (dir === Phaser.UP || dir === Phaser.DOWN) {
                     offsetY = (dir === Phaser.DOWN) ? -4 : 4;
+                    if (dir === Phaser.UP && this.ORIGINAL_OVERFLOW_ERROR_ON) {
+                        offsetX = 4;
+                    }
                 }
                 offsetX *= this.gridsize;
                 offsetY *= this.gridsize;
@@ -395,6 +429,10 @@ Ghost.prototype = {
             this.ghost.animations.play(dir+20);
         } else {
             this.ghost.animations.play(dir);
+            if (this.name === "blinky" && this.game.numDots < 3) {
+                speed = this.cruiseElroySpeed;
+                this.mode = this.CHASE;   
+            }
         }
         
         if (this.currentDir === Phaser.NONE) {
@@ -411,13 +449,12 @@ Ghost.prototype = {
             this.ghost.body.velocity.y = speed;
         }
     },
-
     
     scatter: function() {
         if (this.mode !== this.RETURNING_HOME) {
             this.ghost.animations.play(this.currentDir);
             this.isAttacking = false;
-            if (this.mode !== this.AT_HOME && this.mode != this.EXIT_HOME) {
+            if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
                 this.mode = this.SCATTER;
             }
         }

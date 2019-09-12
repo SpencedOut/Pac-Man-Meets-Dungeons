@@ -8,7 +8,7 @@ var Pacman = function(game, key) {
     this.keyPressTimer = 0;
     
     this.gridsize = this.game.gridsize;
-    this.safetile = this.game.safetile;
+    this.safetiles = this.game.safetile;
 
     this.marker = new Phaser.Point();
     this.turnPoint = new Phaser.Point();
@@ -23,17 +23,18 @@ var Pacman = function(game, key) {
     
     this.keyPressTimer = 0;
     this.KEY_COOLING_DOWN_TIME = 750;
-
+    
+    //  Position Pacman at grid location 14x17 (the +8 accounts for his anchor)
     this.sprite = this.game.add.sprite((9 * this.gridsize) + this.gridsize/2, (14 * this.gridsize) + this.gridsize/2, key, 0);
     this.sprite.anchor.setTo(0.5);
     this.sprite.animations.add('munch', [0, 1, 2, 1], 20, true);
     this.sprite.animations.add("death", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 10, false);
     
     this.game.physics.arcade.enable(this.sprite);
-    this.sprite.body.setSize(this.gridsize, this.gridsize, 0, 0);
+    this.sprite.body.setSize(32, 32, 0, 0);
     
     this.sprite.play('munch');
-    this.move(Phaser.LEFT);    
+    this.move(Phaser.NONE);
 };
 
 Pacman.prototype.move = function(direction) {
@@ -80,8 +81,8 @@ Pacman.prototype.move = function(direction) {
 
 Pacman.prototype.update = function() {
     if (!this.isDead) {
-        this.game.physics.arcade.collide(this.sprite, this.game.obstacles);
-        this.game.physics.arcade.overlap(this.sprite, this.game.keys, this.eatKey, null, this);
+        this.game.physics.arcade.collide(this.sprite, this.game.layer);
+        this.game.physics.arcade.overlap(this.sprite, this.game.dots, this.eatDot, null, this);
         this.game.physics.arcade.overlap(this.sprite, this.game.pills, this.eatPill, null, this);
 
         this.marker.x = this.game.math.snapToFloor(Math.floor(this.sprite.x), this.gridsize) / this.gridsize;
@@ -118,6 +119,7 @@ Pacman.prototype.checkKeys = function(cursors) {
         cursors.right.isDown ||
         cursors.up.isDown ||
         cursors.down.isDown) {
+        console.log("key pressed");
         this.keyPressTimer = this.game.time.time + this.KEY_COOLING_DOWN_TIME;
     }
 
@@ -144,15 +146,20 @@ Pacman.prototype.checkKeys = function(cursors) {
         this.turning = Phaser.NONE;
         this.want2go = Phaser.NONE;
     } else {
-        this.checkDirection(this.want2go);    
+        this.checkDirection(this.want2go);
     }
 };
 
-Pacman.prototype.eatKey = function(pacman, key) {
-    key.kill();
+Pacman.prototype.eatDot = function(pacman, dot) {
+    dot.kill();
     
     this.game.score ++;
-    this.game.keycollected ++;
+    this.game.numDots --;
+
+    if (this.game.dots.total === 0)
+    {
+        this.game.dots.callAll('revive');
+    }
 };
 
 Pacman.prototype.eatPill = function(pacman, pill) {
@@ -160,7 +167,7 @@ Pacman.prototype.eatPill = function(pacman, pill) {
     
     this.game.score ++;
     this.game.numPills --;
-
+    
     this.game.enterFrightenedMode();
 };
 
@@ -186,7 +193,7 @@ Pacman.prototype.turn = function () {
 };
 
 Pacman.prototype.checkDirection = function (turnTo) {
-    if (this.turning === turnTo || this.directions[turnTo] === null || this.directions[turnTo].index !== this.safetile)
+    if (this.turning === turnTo || this.directions[turnTo] === null || !this.checkSafetile(this.directions[turnTo].index))
     {
         //  Invalid direction if they're already set to turn that way
         //  Or there is no tile there, or the tile isn't index 1 (a floor tile)
@@ -215,4 +222,13 @@ Pacman.prototype.getPosition = function () {
 
 Pacman.prototype.getCurrentDirection = function() {
     return this.current;
+};
+
+Pacman.prototype.checkSafetile = function(tileIndex) {
+    for (var q=0; q<this.safetiles.length; q++) {
+        if (this.safetiles[q] === tileIndex) {
+            return true;
+        }
+    }
+    return false;
 };
