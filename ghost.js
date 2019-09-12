@@ -20,6 +20,7 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.EXIT_HOME  = "leaving_home";
     this.RETURNING_HOME = "returning_home";
     this.isAttacking = false;
+    this.lastDirection = null;
     
     this.mode = this.AT_HOME;
     this.scatterDestination = new Phaser.Point(18 * this.gridsize, 20 * this.gridsize);
@@ -180,9 +181,9 @@ Ghost.prototype = {
                             }
                         }
 
-                        if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                        /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
                             bestDecision = this.currentDir;
-                        }
+                        } */
 
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
@@ -242,9 +243,9 @@ Ghost.prototype = {
                             }
                         }
                         
-                        if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
+                        /* if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.UP) {
                             bestDecision = this.currentDir;
-                        }
+                        } */
 
                         this.turnPoint.x = (x * this.gridsize) + (this.gridsize / 2);
                         this.turnPoint.y = (y * this.gridsize) + (this.gridsize / 2);
@@ -466,32 +467,27 @@ Ghost.prototype = {
             this.ghost.body.velocity.x = this.ghost.body.velocity.y = 0;
             return;
         }
-        
+
+        if (dir === Phaser.LEFT || dir === Phaser.UP) speed = -speed;
         if (dir === Phaser.LEFT && !this.game.isPaused) {
-            speed = -speed;
             this.ghost.animations.play("left");
         } else if (dir === Phaser.RIGHT && !this.game.isPaused) {
             this.ghost.animations.play("right");
         } else if (dir === Phaser.UP && !this.game.isPaused && this.lastDirection === Phaser.LEFT) {
-            speed = -speed;
             this.ghost.animations.play("left");
         } else if (dir === Phaser.UP && !this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
-            speed = -speed;
             this.ghost.animations.play("right");
         } else if (dir === Phaser.DOWN && !this.game.isPaused && this.lastDirection === Phaser.LEFT) {
             this.ghost.animations.play("left");
         } else if (dir === Phaser.DOWN && !this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
             this.ghost.animations.play("right");
         } else if (dir === Phaser.LEFT && this.game.isPaused) {
-            speed = -speed;
             this.ghost.animations.play("frightened left");
         } else if (dir === Phaser.RIGHT && this.game.isPaused) {
             this.ghost.animations.play("frightened right");
         } else if (dir === Phaser.UP && this.game.isPaused && this.lastDirection === Phaser.LEFT) {
-            speed = -speed;
             this.ghost.animations.play("frightened left");
         } else if (dir === Phaser.UP && this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
-            speed = -speed;
             this.ghost.animations.play("frightened right");
         } else if (dir === Phaser.DOWN && this.game.isPaused && this.lastDirection === Phaser.LEFT) {
             this.ghost.animations.play("frightened left");

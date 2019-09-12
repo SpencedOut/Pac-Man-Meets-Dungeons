@@ -26,12 +26,12 @@ var PacmanGame = function (game) {
     this.gridsize = 32;
     this.threshold = 3;
     
-    this.SPECIAL_TILES = [
+    /* this.SPECIAL_TILES = [
         { x: 12, y: 11 },
         { x: 15, y: 11 },
         { x: 12, y: 23 },
         { x: 15, y: 23 }
-    ];
+    ]; */
     
     this.TIME_MODES = [
         {
@@ -74,8 +74,8 @@ var PacmanGame = function (game) {
     this.isPaused = false;
     this.FRIGHTENED_MODE_TIME = 7000;
     
-    this.ORIGINAL_OVERFLOW_ERROR_ON = true;
-    this.DEBUG_ON = true;
+    this.ORIGINAL_OVERFLOW_ERROR_ON = false;
+    this.DEBUG_ON = false;
     
     this.KEY_COOLING_DOWN_TIME = 250;
     this.dieTimer = 0;
@@ -98,8 +98,6 @@ PacmanGame.prototype = {
 
     preload: function () {
         this.load.image('tiles', 'assets/tile32.png');
-        this.load.spritesheet('pacman', 'assets/pacman.png', 32, 32);
-        this.load.spritesheet("ghosts", "assets/ghosts32.png", 32, 32);
         this.load.image("lifecounter", "assets/heart32.png");
         this.load.image('key_yellow', 'assets/pickups/key_yellow.png');
         this.load.image('key_red', 'assets/pickups/key_red.png');
@@ -251,14 +249,14 @@ PacmanGame.prototype = {
         // console.log(this.remainingTime);
     },
     
-    isSpecialTile: function(tile) {
+    /* isSpecialTile: function(tile) {
         for (var q=0; q<this.SPECIAL_TILES.length; q++) {
             if (tile.x === this.SPECIAL_TILES[q].x && tile.y === this.SPECIAL_TILES[q].y) {
                 return true;
             } 
         }
         return false;
-    },
+    }, */
     
     updateGhosts: function() {
         for (var i=0; i<this.ghosts.length; i++) {
