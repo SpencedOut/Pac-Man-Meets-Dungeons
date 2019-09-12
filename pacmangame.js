@@ -131,7 +131,7 @@ PacmanGame.prototype = {
         }
         
         this.pills = this.add.physicsGroup();
-        this.numPills = this.map.createFromTiles(80, 22, "sword", this.item, this.pills);
+        this.numPills = this.map.createFromTiles([59, 80], [13, 31], "sword", this.item, this.pills);
 
         //  The keys will need to be offset by 12px to put them back in the middle of the grid
         // this.keys.setAll('x', 12, false, false, 1);
@@ -213,7 +213,7 @@ PacmanGame.prototype = {
                 } else {
                     this.sendScatterOrder();
                 }
-                // console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
+                console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
             }
             if (this.isPaused && this.changeModeTimer < this.time.time) {
                 this.changeModeTimer = this.time.time + this.remainingTime;
@@ -224,12 +224,15 @@ PacmanGame.prototype = {
                 } else {
                     this.sendScatterOrder();
                 }
-                // console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
+                console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
             }
         }
         
         this.pacman.update();
-        // console.log("ghost update");
+        console.log("clyde" + " " + this.ghosts[0].mode);
+        console.log("pinky" + " " + this.ghosts[1].mode);
+        console.log("inky" + " " + this.ghosts[2].mode);
+        console.log("blinky" + " " + this.ghosts[3].mode);
 		this.updateGhosts();
         
         this.checkKeys();
@@ -355,7 +358,7 @@ PacmanGame.prototype = {
     },
 
     dogEatsDog: function(pacman, ghost) {
-        if (this.isPaused) {
+        if (this[ghost.name].mode === this[ghost.name].RANDOM) {
             this.sound.playKillEnemy();
             this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
             this[ghost.name].ghostDestination = new Phaser.Point(14 * this.gridsize, 14 * this.gridsize);
@@ -428,6 +431,7 @@ PacmanGame.prototype = {
         this.gameOver = false;
         this.gameWin = false;
         this.remainingTime = 0;
+        this.keys.callAll('kill');
         this.keys.getChildAt(0).revive();
         this.pills.callAll('revive');
         this.numKeys = 4;

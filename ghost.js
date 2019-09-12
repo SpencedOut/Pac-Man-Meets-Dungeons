@@ -27,7 +27,7 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.returnDestination = new Phaser.Point(9 * this.gridsize, 10 * this.gridsize);
     
     this.ghostSpeed = 150;
-    this.ghostScatterSpeed = 125;
+    this.ghostScatterSpeed = 135;
     this.ghostFrightenedSpeed = 75;
     this.cruiseElroySpeed = 160;
     this.directions = [ null, null, null, null, null ];
@@ -77,7 +77,6 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.ghost.animations.add("frightened left", [8, 9, 10, 11, 12, 13, 14, 15], 20, true);
     this.ghost.animations.add("frightened right", [16, 17, 18, 19, 20, 21, 22, 23], 20, true);
 
-    
     //this.ghost.play(startDir);
     
     this.game.physics.arcade.enable(this.ghost);
@@ -142,6 +141,7 @@ Ghost.prototype = {
 
                         this.lastPosition = { x: x, y: y };
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
+                        this.lastDirection = this.currentDir;
                         this.move(newDirection);
 
                         this.turnTimer = this.game.time.time + this.TURNING_COOLDOWN;
@@ -195,6 +195,7 @@ Ghost.prototype = {
                         this.lastPosition = { x: x, y: y };
 
                         this.ghost.body.reset(this.turnPoint.x, this.turnPoint.y);
+                        this.lastDirection = this.currentDir;
                         this.move(bestDecision);
 
                         this.turnTimer = this.game.time.time + this.TURNING_COOLDOWN;
@@ -346,6 +347,7 @@ Ghost.prototype = {
                     break;
                     
                 case this.STOP:
+                    this.lastDirection = this.currentDir;
                     this.move(Phaser.NONE);
                     break;
             }
@@ -471,6 +473,7 @@ Ghost.prototype = {
         if (dir === Phaser.LEFT || dir === Phaser.UP) speed = -speed;
         if (dir === Phaser.LEFT && !this.game.isPaused) {
             this.ghost.animations.play("left");
+            console.log(this.name + "animation left");
         } else if (dir === Phaser.RIGHT && !this.game.isPaused) {
             this.ghost.animations.play("right");
         } else if (dir === Phaser.UP && !this.game.isPaused && this.lastDirection === Phaser.LEFT) {
@@ -481,17 +484,18 @@ Ghost.prototype = {
             this.ghost.animations.play("left");
         } else if (dir === Phaser.DOWN && !this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
             this.ghost.animations.play("right");
-        } else if (dir === Phaser.LEFT && this.game.isPaused) {
+        } else if (dir === Phaser.LEFT && this.mode == this.RANDOM) {
+            console.log(this.name + "frightened left");
             this.ghost.animations.play("frightened left");
-        } else if (dir === Phaser.RIGHT && this.game.isPaused) {
+        } else if (dir === Phaser.RIGHT && this.mode == this.RANDOM) {
             this.ghost.animations.play("frightened right");
-        } else if (dir === Phaser.UP && this.game.isPaused && this.lastDirection === Phaser.LEFT) {
+        } else if (dir === Phaser.UP && this.mode == this.RANDOM && this.lastDirection === Phaser.LEFT) {
             this.ghost.animations.play("frightened left");
-        } else if (dir === Phaser.UP && this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
+        } else if (dir === Phaser.UP && this.mode == this.RANDOM && this.lastDirection === Phaser.RIGHT) {
             this.ghost.animations.play("frightened right");
-        } else if (dir === Phaser.DOWN && this.game.isPaused && this.lastDirection === Phaser.LEFT) {
+        } else if (dir === Phaser.DOWN && this.mode == this.RANDOM && this.lastDirection === Phaser.LEFT) {
             this.ghost.animations.play("frightened left");
-        } else if (dir === Phaser.DOWN && this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
+        } else if (dir === Phaser.DOWN && this.mode == this.RANDOM && this.lastDirection === Phaser.RIGHT) {
             this.ghost.animations.play("frightened right");
         }
         if (dir === Phaser.LEFT || dir === Phaser.RIGHT) {

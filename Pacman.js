@@ -24,7 +24,7 @@ var Pacman = function(game, key) {
     this.lastMove = Phaser.NONE;
     
     this.keyPressTimer = 0;
-    this.KEY_COOLING_DOWN_TIME = 750;
+    this.KEY_COOLING_DOWN_TIME = 250;
     
     //  Position Pacman at grid location 14x17 (the +8 accounts for his anchor)
     this.sprite = this.game.add.sprite((9 * this.gridsize) + this.gridsize/2, (14 * this.gridsize) + this.gridsize/2, key, 0);
@@ -198,7 +198,7 @@ Pacman.prototype.turn = function () {
 };
 
 Pacman.prototype.checkDirection = function (turnTo) {
-    if (this.game.gameWin == true || this.turning === turnTo || this.directions[turnTo] === null || !this.checkSafetile(this.directions[turnTo].index))
+    if (this.game.gameWin === true || this.game.gameOver === true || this.turning === turnTo || this.directions[turnTo] === null || !this.checkSafetile(this.directions[turnTo].index))
     {
         //  Invalid direction if they're already set to turn that way
         //  Or there is no tile there, or the tile isn't index 1 (a floor tile)
@@ -208,6 +208,7 @@ Pacman.prototype.checkDirection = function (turnTo) {
     //  Check if they want to turn around and can
     if (this.current === this.opposites[turnTo])
     {
+        this.lastMove = this.current;
         this.move(turnTo);
         this.keyPressTimer = this.game.time.time;
     }
