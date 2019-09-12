@@ -460,13 +460,34 @@ Ghost.prototype = {
         
         if (dir === Phaser.LEFT && !this.game.isPaused) {
             speed = -speed;
-            this.ghost.animations.play;
-        } else if (dir === Phaser.RIGHT) {
+            this.ghost.animations.play("left");
+        } else if (dir === Phaser.RIGHT && !this.game.isPaused) {
+            this.ghost.animations.play("right");
+        } else if (dir === Phaser.UP && !this.game.isPaused && this.lastDirection === Phaser.LEFT) {
             speed = -speed;
-        } else if (dir === Phaser.UP) {
+            this.ghost.animations.play("left");
+        } else if (dir === Phaser.UP && !this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
             speed = -speed;
-        } else if (dir === Phaser.UP) {
+            this.ghost.animations.play("right");
+        } else if (dir === Phaser.DOWN && !this.game.isPaused && this.lastDirection === Phaser.LEFT) {
+            this.ghost.animations.play("left");
+        } else if (dir === Phaser.DOWN && !this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
+            this.ghost.animations.play("right");
+        } else if (dir === Phaser.LEFT && this.game.isPaused) {
             speed = -speed;
+            this.ghost.animations.play("frightened left");
+        } else if (dir === Phaser.RIGHT && this.game.isPaused) {
+            this.ghost.animations.play("frightened right");
+        } else if (dir === Phaser.UP && this.game.isPaused && this.lastDirection === Phaser.LEFT) {
+            speed = -speed;
+            this.ghost.animations.play("frightened left");
+        } else if (dir === Phaser.UP && this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
+            speed = -speed;
+            this.ghost.animations.play("frightened right");
+        } else if (dir === Phaser.DOWN && this.game.isPaused && this.lastDirection === Phaser.LEFT) {
+            this.ghost.animations.play("frightened left");
+        } else if (dir === Phaser.DOWN && this.game.isPaused && this.lastDirection === Phaser.RIGHT) {
+            this.ghost.animations.play("frightened right");
         }
         if (dir === Phaser.LEFT || dir === Phaser.RIGHT) {
             this.ghost.body.velocity.x = speed;
