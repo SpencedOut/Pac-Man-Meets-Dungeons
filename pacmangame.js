@@ -5,7 +5,7 @@ var PacmanGame = function (game) {
     this.layer = null;
     this.item = null;
     
-    this.numKeys = 0;
+    this.numKeys = 4;
     this.TOTAL_KEYS = 0;
     this.score = 0;
     this.scoreText = null;
@@ -97,13 +97,18 @@ PacmanGame.prototype = {
     },
 
     preload: function () {
-        this.load.image('dot', 'assets/dot.png');
-        this.load.image("pill", "assets/pill16.png");
         this.load.image('tiles', 'assets/tile32.png');
         this.load.spritesheet('pacman', 'assets/pacman.png', 32, 32);
         this.load.spritesheet("ghosts", "assets/ghosts32.png", 32, 32);
         this.load.image("lifecounter", "assets/heart32.png");
+        this.load.image('key_yellow', 'assets/pickups/key_yellow.png');
+        this.load.image('key_red', 'assets/pickups/key_red.png');
+        this.load.image('key_blue', 'assets/pickups/key_blue.png');
+        this.load.image('key_green', 'assets/pickups/key_green.png');
+        this.load.image('sword', 'assets/pickups/sword.png')
         this.load.tilemap('map', 'assets/level1.json', null, Phaser.Tilemap.TILED_JSON);
+        this.load.spritesheet('hero', 'assets/hero/pax.png', 32, 32);
+        this.load.spritesheet('monster', 'assets/monsters/zombie_sheet.png', 32, 32);
 
     },
 
@@ -115,22 +120,28 @@ PacmanGame.prototype = {
         this.item = this.map.createLayer('items');
 
         this.keys = this.add.physicsGroup();
-        this.numKeys = this.map.createFromTiles([2, 6, 38, 42], [22, 22, 21, 22], 'dot', this.item, this.keys);
+        this.key1 = this.map.createFromTiles(42, 22, 'key_yellow', this.item, this.keys);
+        this.key2 = this.map.createFromTiles(2, 22, 'key_red', this.item, this.keys);
+        this.key3 = this.map.createFromTiles(38, 21, 'key_blue', this.item, this.keys);
+        this.key4 = this.map.createFromTiles(6, 22, 'key_green', this.item, this.keys);
         this.TOTAL_KEYS = this.numKeys;
+        for (var i = 1; i < this.numKeys; i++) {
+            this.keys.children[i].kill();
+        }
         
         this.pills = this.add.physicsGroup();
-        this.numPills = this.map.createFromTiles(80, 22, "pill", this.item, this.pills);
+        this.numPills = this.map.createFromTiles(80, 22, "sword", this.item, this.pills);
 
         //  The keys will need to be offset by 12px to put them back in the middle of the grid
-        this.keys.setAll('x', 12, false, false, 1);
-        this.keys.setAll('y', 12, false, false, 1);
+        // this.keys.setAll('x', 12, false, false, 1);
+        // this.keys.setAll('y', 12, false, false, 1);
 
         //  Pacman should collide with everything except the safe tile
         this.map.setCollisionByExclusion(this.safetile, true, this.layer);
         this.map.setCollisionByExclusion([35], true, this.item);
 
 		// Our hero
-        this.pacman = new Pacman(this, "pacman");
+        this.pacman = new Pacman(this, "hero");
         for (var i =  0; i < this.pacman.life; i++) {
             this.livesImage.push(this.add.image(490 + (i * 32), 400, 'lifecounter'));
         }
@@ -170,6 +181,9 @@ PacmanGame.prototype = {
         if (this.gameOver == true) {
             this.loseText.text = "You Lose!";
             this.loseHint.text = "Press Enter to restart.";
+        } else {
+            this.loseText.text = "";
+            this.loseHint.text = "";
         }
         
         if (!this.pacman.isDead) {
@@ -202,6 +216,7 @@ PacmanGame.prototype = {
             if (this.isPaused && this.changeModeTimer < this.time.time) {
                 this.changeModeTimer = this.time.time + this.remainingTime;
                 this.isPaused = false;
+                this.pacman.sprite.play('munch');
                 if (this.TIME_MODES[this.currentMode].mode === "chase") {
                     this.sendAttackOrder();
                 } else {
@@ -408,7 +423,7 @@ PacmanGame.prototype = {
         this.gameOver = false;
         this.gameWin = false;
         this.remainingTime = 0;
-        this.keys.callAll('revive');
+        this.keys.getChildAt(0).revive();
         this.pills.callAll('revive');
         this.numKeys = 4;
         this.numPills = 2;

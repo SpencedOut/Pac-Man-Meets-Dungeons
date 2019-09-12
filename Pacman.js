@@ -21,6 +21,7 @@ var Pacman = function(game, key) {
     this.current = Phaser.NONE;
     this.turning = Phaser.NONE;
     this.want2go = Phaser.NONE;
+    this.lastMove = Phaser.NONE;
     
     this.keyPressTimer = 0;
     this.KEY_COOLING_DOWN_TIME = 750;
@@ -28,8 +29,9 @@ var Pacman = function(game, key) {
     //  Position Pacman at grid location 14x17 (the +8 accounts for his anchor)
     this.sprite = this.game.add.sprite((9 * this.gridsize) + this.gridsize/2, (14 * this.gridsize) + this.gridsize/2, key, 0);
     this.sprite.anchor.setTo(0.5);
-    this.sprite.animations.add('munch', [0, 1, 2, 1], 20, true);
-    this.sprite.animations.add("death", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 10, false);
+    this.sprite.animations.add('munch', [0, 1, 2, 3, 4, 5, 6, 7], 20, true);
+    this.sprite.animations.add('armed', [8, 9, 10, 11, 12, 13, 14, 15], 20, true);
+    // this.sprite.animations.add("death", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 10, false);
     
     this.game.physics.arcade.enable(this.sprite);
     this.sprite.body.setSize(32, 32, 0, 0);
@@ -68,13 +70,9 @@ Pacman.prototype.move = function(direction) {
     {
         this.sprite.scale.x = -1;
     }
-    else if (direction === Phaser.UP)
+    else if ((direction === Phaser.UP || direction === Phaser.DOWN) && this.lastMove == Phaser. LEFT)
     {
-        this.sprite.angle = 270;
-    }
-    else if (direction === Phaser.DOWN)
-    {
-        this.sprite.angle = 90;
+        this.sprite.scale.x = -1;
     }
 
     this.current = direction;
@@ -115,7 +113,7 @@ Pacman.prototype.update = function() {
     } else {
         this.move(Phaser.NONE);
         if (!this.isAnimatingDeath) {
-            this.sprite.play("death");
+            // this.sprite.play("death");
             this.isAnimatingDeath = true;
         }
     }
@@ -162,6 +160,8 @@ Pacman.prototype.eatDot = function(pacman, key) {
     
     this.game.score ++;
     this.game.numKeys --;
+    if (this.game.numKeys > 0)
+        this.game.keys.getChildAt(4 - this.game.numKeys).revive();
 };
 
 Pacman.prototype.eatPill = function(pacman, pill) {
@@ -169,7 +169,8 @@ Pacman.prototype.eatPill = function(pacman, pill) {
     
     this.game.score ++;
     this.game.numPills --;
-    
+
+    h=this.sprite.play('armed');
     this.game.enterFrightenedMode();
 };
 
@@ -210,6 +211,7 @@ Pacman.prototype.checkDirection = function (turnTo) {
     }
     else
     {
+        this.lastMove = this.current;
         this.turning = turnTo;
 
         this.turnPoint.x = (this.marker.x * this.gridsize) + (this.gridsize / 2);

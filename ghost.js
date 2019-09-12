@@ -40,15 +40,15 @@ var Ghost = function(game, key, name, startPos, startDir) {
     var offsetGhost = 0;
     switch (this.name) {
         case "clyde":
-            offsetGhost = 4;
+            //offsetGhost = 4;
             this.scatterDestination = new Phaser.Point(0, 20 * this.gridsize);
             break;
         case "pinky":
-            offsetGhost = 8;
+            //offsetGhost = 8;
             this.scatterDestination = new Phaser.Point(0, 0);
             break;
         case "blinky":
-            offsetGhost = 12;
+            //offsetGhost = 12;
             this.scatterDestination = new Phaser.Point(18 * this.gridsize, 0);
             this.mode = this.SCATTER;
             break;
@@ -60,6 +60,7 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.ghost = this.game.add.sprite((startPos.x * this.gridsize) + this.gridsize/2, (startPos.y * this.gridsize) + this.gridsize/2, key, 0);
     this.ghost.name = this.name;
     this.ghost.anchor.set(0.5);
+    /*
     this.ghost.animations.add(Phaser.LEFT, [offsetGhost], 0, false);
     this.ghost.animations.add(Phaser.UP, [offsetGhost+1], 0, false);
     this.ghost.animations.add(Phaser.DOWN, [offsetGhost+2], 0, false);
@@ -69,6 +70,12 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.ghost.animations.add(Phaser.LEFT+20, [21], 0, false);
     this.ghost.animations.add(Phaser.UP+20, [22], 0, false);
     this.ghost.animations.add(Phaser.DOWN+20, [23], 0, false);
+    */
+    this.ghost.animations.add("left", [8, 9, 10, 11, 12, 13, 14, 15], 20, true);
+    this.ghost.animations.add("right", [0, 1, 2, 3, 4, 5, 6, 7], 20, true);
+    this.ghost.animations.add("frightened left", [16, 17, 18, 19, 20, 21, 22, 23], 20, true);
+    this.ghost.animations.add("frightened right", [24, 25, 26, 27, 28, 29, 30, 31], 20, true);
+
     
     this.ghost.play(startDir);
     
@@ -338,7 +345,7 @@ Ghost.prototype = {
     attack: function() {
         if (!this.game.pacman.isDead && this.mode !== this.RETURNING_HOME) {
             this.isAttacking = true;
-            this.ghost.animations.play(this.currentDir);
+            //this.ghost.animations.play(this.currentDir);
             if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME) {
                 this.currentDir = this.opposites[this.currentDir];
             }
@@ -356,7 +363,7 @@ Ghost.prototype = {
     
     enterFrightenedMode: function() {
         if (this.mode !== this.AT_HOME && this.mode !== this.EXIT_HOME && this.mode !== this.RETURNING_HOME) {
-            this.ghost.play("frightened");
+            //this.ghost.play("frightened");
             this.mode = this.RANDOM;
             this.isAttacking = false;
         }
@@ -437,7 +444,7 @@ Ghost.prototype = {
             speed = this.ghostFrightenedSpeed;
         } else if (this.mode === this.RETURNING_HOME) {
             speed = this.cruiseElroySpeed;
-            this.ghost.animations.play(dir+20);
+            // this.ghost.animations.play(dir+20);
         } else {
             this.ghost.animations.play(dir);
             if (this.name === "blinky" && this.game.numDots < 3) {
@@ -451,7 +458,14 @@ Ghost.prototype = {
             return;
         }
         
-        if (dir === Phaser.LEFT || dir === Phaser.UP) {
+        if (dir === Phaser.LEFT && !this.game.isPaused) {
+            speed = -speed;
+            this.ghost.animations.play;
+        } else if (dir === Phaser.RIGHT) {
+            speed = -speed;
+        } else if (dir === Phaser.UP) {
+            speed = -speed;
+        } else if (dir === Phaser.UP) {
             speed = -speed;
         }
         if (dir === Phaser.LEFT || dir === Phaser.RIGHT) {
