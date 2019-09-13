@@ -372,31 +372,33 @@ PacmanGame.prototype = {
     },
 
     dogEatsDog: function(pacman, ghost) {
-        if (this[ghost.name].mode === this[ghost.name].RANDOM) {
-            this.sound.playKillEnemy();
-            this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
-            this[ghost.name].ghostDestination = new Phaser.Point(14 * this.gridsize, 14 * this.gridsize);
-            switch(this.killCombo++) {
-                case 0:
-                    this.score += 200;
-                    console.log("//////////////////////////////   200");
-                    break;
-                case 1:
-                    this.score += 400;
-                    console.log("//////////////////////////////   400");
-                    break;
-                case 2:
-                    this.score += 800;
-                    console.log("//////////////////////////////   800");
-                    break;
-                case 3:
-                    this.score += 1600;
-                    console.log("//////////////////////////////   1600");
-                    break;
+        if (Phaser.Math.distance(pacman.x, pacman.y, ghost.x, ghost.y) < 25) {
+            if (this[ghost.name].mode === this[ghost.name].RANDOM) {
+                this.sound.playKillEnemy();
+                this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
+                this[ghost.name].ghostDestination = new Phaser.Point(14 * this.gridsize, 14 * this.gridsize);
+                switch(this.killCombo++) {
+                    case 0:
+                        this.score += 200;
+                        console.log("//////////////////////////////   200");
+                        break;
+                    case 1:
+                        this.score += 400;
+                        console.log("//////////////////////////////   400");
+                        break;
+                    case 2:
+                        this.score += 800;
+                        console.log("//////////////////////////////   800");
+                        break;
+                    case 3:
+                        this.score += 1600;
+                        console.log("//////////////////////////////   1600");
+                        break;
+                }
+            } else {
+                this.killPacman();
+                this.lastDieTime = this.time.time;
             }
-        } else {
-            this.killPacman();
-            this.lastDieTime = this.time.time;
         }
     },
 
@@ -449,6 +451,7 @@ PacmanGame.prototype = {
         this.score += 500;
         this.stopGhosts();
         this.pacman.move(Phaser.NONE);
+        this.sound.playLevelComplete();
     },
 
     newGame: function() {
@@ -481,7 +484,6 @@ PacmanGame.prototype = {
         this.pacman.respawn();
         this.sound.playBgm();
     }
-
 };
 
 game.state.add('Game', PacmanGame, true);

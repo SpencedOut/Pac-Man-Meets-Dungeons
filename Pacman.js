@@ -38,6 +38,7 @@ var Pacman = function(game, key) {
     
     this.sprite.play('munch');
     this.move(Phaser.LEFT);
+    this.hasWonGame = false;
 };
 
 Pacman.prototype.move = function(direction) {
@@ -108,7 +109,10 @@ Pacman.prototype.update = function() {
 
         if (this.game.keys.total === 0 && this.marker.x == 17 && this.marker.y == 14)
         {
-            this.game.winGame();
+            if (!this.hasWonGame) {
+                this.game.winGame();
+                this.hasWonGame = true;
+            }
         }
     } else {
         this.move(Phaser.NONE);
