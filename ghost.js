@@ -27,7 +27,7 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.returnDestination = new Phaser.Point(9 * this.gridsize, 10 * this.gridsize);
     
     this.ghostSpeed = 150;
-    this.ghostScatterSpeed = 135;
+    this.ghostScatterSpeed = 130;
     this.ghostFrightenedSpeed = 75;
     this.cruiseElroySpeed = 170;
     this.directions = [ null, null, null, null, null ];
