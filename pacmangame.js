@@ -103,13 +103,16 @@ PacmanGame.prototype = {
         this.load.image('tiles', 'assets/tile32.png');
         this.load.image("lifecounter", "assets/heart32.png");
         this.load.image('key_yellow', 'assets/pickups/key_yellow.png');
-        this.load.image('key_red', 'assets/pickups/key_red.png');
-        this.load.image('key_blue', 'assets/pickups/key_blue.png');
-        this.load.image('key_green', 'assets/pickups/key_green.png');
-        this.load.image('sword', 'assets/pickups/sword.png')
+        this.load.image('key_red', 'assets/pickups/Key_Red.png');
+        this.load.image('key_blue', 'assets/pickups/Key_Blue.png');
+        this.load.image('key_green', 'assets/pickups/Key_Green.png');
+        this.load.image('sword', 'assets/pickups/sword.png');
         this.load.tilemap('map', 'assets/level1.json', null, Phaser.Tilemap.TILED_JSON);
         this.load.spritesheet('hero', 'assets/hero/pax.png', 32, 32);
-        this.load.spritesheet('monster', 'assets/monsters/zombie_sheet.png', 32, 32);
+        this.load.spritesheet('monster1', 'assets/monsters/zombie_red_sheet.png', 32, 32);
+        this.load.spritesheet('monster2', 'assets/monsters/zombie_pink_sheet.png', 32, 32);
+        this.load.spritesheet('monster3', 'assets/monsters/zombie_blue_sheet.png', 32, 32);
+        this.load.spritesheet('monster4', 'assets/monsters/zombie_orange_sheet.png', 32, 32);
         this.sound.loadAllSounds();
     },
 
@@ -164,10 +167,10 @@ PacmanGame.prototype = {
         
         // Ghosts
         // debugger;
-        this.blinky = new Ghost(this, "monster", "blinky", {x:9, y:8}, Phaser.RIGHT);
-        this.pinky = new Ghost(this, "monster", "pinky", {x:9, y:10}, Phaser.LEFT);
-        this.inky = new Ghost(this, "monster", "inky", {x:8, y:10}, Phaser.LEFT);
-        this.clyde = new Ghost(this, "monster", "clyde", {x:10, y:10}, Phaser.RIGHT);
+        this.blinky = new Ghost(this, "monster1", "blinky", {x:9, y:8}, Phaser.RIGHT);
+        this.pinky = new Ghost(this, "monster2", "pinky", {x:9, y:10}, Phaser.LEFT);
+        this.inky = new Ghost(this, "monster3", "inky", {x:8, y:10}, Phaser.LEFT);
+        this.clyde = new Ghost(this, "monster4", "clyde", {x:10, y:10}, Phaser.RIGHT);
         this.ghosts.push(this.clyde, this.pinky, this.inky, this.blinky);
         
         this.gimeMeExitOrder(this.pinky);
@@ -205,7 +208,8 @@ PacmanGame.prototype = {
                 this.isClydeOut = true;
                 this.sendExitOrder(this.clyde);
             }
-            
+
+            console.log("paused " + this.isPaused);
             if (this.TIME_MODES[this.currentMode].time !== -1 && !this.isPaused && this.changeModeTimer < this.time.time) {
                 this.currentMode++;
                 this.changeModeTimer = this.time.time + this.TIME_MODES[this.currentMode].time;
@@ -409,14 +413,10 @@ PacmanGame.prototype = {
     },
 
     getCurrentMode: function() {
-        if (!this.isPaused) {
-            if (this.TIME_MODES[this.currentMode].mode === "scatter") {
-                return "scatter";
-            } else {
-                return "chase";
-            }
+        if (this.TIME_MODES[this.currentMode].mode === "scatter") {
+            return "scatter";
         } else {
-            return "random";
+            return "chase";
         }
     },
 
