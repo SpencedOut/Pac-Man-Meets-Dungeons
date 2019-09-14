@@ -29,7 +29,7 @@ var Ghost = function(game, key, name, startPos, startDir) {
     this.ghostSpeed = 150;
     this.ghostScatterSpeed = 130;
     this.ghostFrightenedSpeed = 75;
-    this.cruiseElroySpeed = 170;
+    this.cruiseElroySpeed = 400;
     this.directions = [ null, null, null, null, null ];
     // Phaser.none/left/right/up/down = 0/1/2/3/4
     this.opposites = [ Phaser.NONE, Phaser.RIGHT, Phaser.LEFT, Phaser.DOWN, Phaser.UP ];
@@ -116,7 +116,7 @@ Ghost.prototype = {
                     possibleExits.push(q);
                 }
             }
-            console.log(this.name, possibleExits);
+            // console.log(this.name, possibleExits);
             switch (this.mode) {
                 case this.RANDOM:
                     if (this.turnTimer < this.game.time.time && (possibleExits.length > 1 || !canContinue)) {

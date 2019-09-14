@@ -32,7 +32,7 @@ var Pacman = function(game, key) {
     this.sprite = this.game.add.sprite((9 * this.gridsize) + this.gridsize/2, (14 * this.gridsize) + this.gridsize/2, key, 0);
     this.sprite.anchor.setTo(0.5);
     this.sprite.animations.add('munch', [0, 1, 2, 3, 4, 5, 6, 7], 20, true);
-    this.sprite.animations.add('armed', [8, 9, 10, 11, 12, 13, 14, 15], 20, true);
+    this.sprite.animations.add('armed', [0, 1, 2, 3, 4, 5, 6, 7], 20, true);
     // this.sprite.animations.add("death", [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], 10, false);
     
     this.game.physics.arcade.enable(this.sprite);
@@ -83,9 +83,13 @@ Pacman.prototype.move = function(direction) {
 Pacman.prototype.update = function() {
     // console.log("is dead " + this.isDead);
     if (!this.isDead) {
+        if (this.sprite.body.velocity.x == 0 && this.sprite.body.velocity.y == 0) {
+            this.sprite.animations.stop();
+        }
         this.game.physics.arcade.collide(this.sprite, this.game.layer);
         this.game.physics.arcade.overlap(this.sprite, this.game.keys, this.eatDot, null, this);
         this.game.physics.arcade.overlap(this.sprite, this.game.pills, this.eatPill, null, this);
+        this.game.physics.arcade.overlap(this.sprite, this.game.treasure, this.pickupTreasure, null, this);
 
         this.marker.x = this.game.math.snapToFloor(Math.floor(this.sprite.x), this.gridsize) / this.gridsize;
         this.marker.y = this.game.math.snapToFloor(Math.floor(this.sprite.y), this.gridsize) / this.gridsize;
@@ -163,8 +167,15 @@ Pacman.prototype.eatDot = function(pacman, key) {
     this.game.score += 100;
     this.game.numKeys --;
     this.game.sound.playPickupKey();
-    if (this.game.numKeys > 0)
+    if (this.game.numKeys > 0) {
         this.game.keys.getChildAt(4 - this.game.numKeys).revive();
+    }
+    if (this.game.numKeys == 2) {
+        this.game.unlockChest(0);
+    }
+    if (this.game.numKeys == 0) {
+        this.game.unlockChest(1);
+    }
 };
 
 Pacman.prototype.eatPill = function(pacman, pill) {
@@ -253,3 +264,20 @@ Pacman.prototype.respawn = function () {
     this.sprite.play('munch');
     this.move(Phaser.LEFT);
 };
+
+Pacman.prototype.pickupTreasure = function(pacman, chest) {
+    switch(chest.name) {
+        case '1':
+            if (this.game.chest1Unlocked) {
+                this.game.score += 200;
+                chest.kill();
+            }
+            break;
+        case '2':
+            if (this.game.chest2Unlocked) {
+                this.game.score += 200;
+                chest.kill();
+            }
+            break;
+    }
+}

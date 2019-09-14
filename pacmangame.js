@@ -82,6 +82,10 @@ var PacmanGame = function (game) {
     this.game = game;
     this.sounds = null;
     this.killCombo = 0;
+
+    this.treasure;
+    this.chest1Unlocked = false;
+    this.chest2Unlocked = false;
 };
 
 PacmanGame.prototype = {
@@ -103,17 +107,21 @@ PacmanGame.prototype = {
     preload: function () {
         this.load.image('tiles', 'assets/tile32.png');
         this.load.image("lifecounter", "assets/heart32.png");
-        this.load.image('key_yellow', 'assets/pickups/key_yellow.png');
-        this.load.image('key_red', 'assets/pickups/Key_Red.png');
-        this.load.image('key_blue', 'assets/pickups/Key_Blue.png');
-        this.load.image('key_green', 'assets/pickups/Key_Green.png');
-        this.load.image('sword', 'assets/pickups/sword.png');
+        this.load.spritesheet('key_yellow', 'assets/pickups/yellow-key-sparkle.png', 32, 32);
+        this.load.spritesheet('key_red', 'assets/pickups/red-key-sparkle.png', 32, 32);
+        this.load.spritesheet('key_blue', 'assets/pickups/blue-key-sparkle.png', 32, 32);
+        this.load.spritesheet('key_green', 'assets/pickups/green-key-sparkle.png', 32, 32);
+        this.load.image('sword', 'assets/pickups/sword-big.png');
         this.load.tilemap('map', 'assets/level1.json', null, Phaser.Tilemap.TILED_JSON);
-        this.load.spritesheet('hero', 'assets/hero/pax.png', 32, 32);
+        this.load.spritesheet('hero', 'assets/hero/elf-right-armed.png', 32, 32);
         this.load.spritesheet('monster1', 'assets/monsters/zombie_red_sheet.png', 32, 32);
         this.load.spritesheet('monster2', 'assets/monsters/zombie_pink_sheet.png', 32, 32);
         this.load.spritesheet('monster3', 'assets/monsters/zombie_blue_sheet.png', 32, 32);
         this.load.spritesheet('monster4', 'assets/monsters/zombie_orange_sheet.png', 32, 32);
+        // this.load.spritesheet('hero-new', 'assets/hero/elf-right-armed.png', 32, 32);
+        this.load.spritesheet('treasure', 'assets/pickups/treasure.png', 32, 32);
+        this.load.spritesheet('torch', 'assets/props/torch.png', 32, 32);
+        this.load.spritesheet('grass', 'assets/props/grass.png', 32, 32);
         this.sound.loadAllSounds();
     },
 
@@ -131,9 +139,77 @@ PacmanGame.prototype = {
         this.key3 = this.map.createFromTiles(38, 21, 'key_blue', this.item, this.keys);
         this.key4 = this.map.createFromTiles(6, 22, 'key_green', this.item, this.keys);
         this.TOTAL_KEYS = this.numKeys;
+        for (var i = 0; i < this.numKeys; i++) {
+            this.keys.children[i].animations.add('shine', [0, 0, 0, 0, 1, 2, 3, 4, 5], 8, true);
+            this.keys.children[i].play('shine');
+        }
         for (var i = 1; i < this.numKeys; i++) {
             this.keys.children[i].kill();
         }
+
+        // Very fast but inefficient solutions used here
+        this.torchLeft = this.add.group();
+        var torchNum = this.map.createFromTiles(58, -1, 'torch', this.item, this.torchLeft);
+        for (var i = 0; i < torchNum; i++) {
+            this.torchLeft.children[i].rotation = -3.141562 / 3.5;
+            this.torchLeft.children[i].anchor.x = 0.5;
+            this.torchLeft.children[i].anchor.y = -0.4;
+            this.torchLeft.children[i].animations.add('flame', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 16, true);
+            this.torchLeft.children[i].play('flame');
+        }
+
+        this.torchUp = this.add.group();
+        torchNum = this.map.createFromTiles(60, -1, 'torch', this.item, this.torchUp);
+        for (var i = 0; i < torchNum; i++) {
+            this.torchUp.children[i].rotation = 3.141562 / 3.5;
+            this.torchUp.children[i].anchor.x = 0;
+            this.torchUp.children[i].anchor.y = 0.5;
+            this.torchUp.children[i].animations.add('flame', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 16, true);
+            this.torchUp.children[i].play('flame');
+        }
+
+        this.torchRight = this.add.group();
+        torchNum = this.map.createFromTiles(50, -1, 'torch', this.item, this.torchRight);
+        for (var i = 0; i < torchNum; i++) {
+            this.torchRight.children[i].anchor.y = -0.2;
+            this.torchRight.children[i].animations.add('flame', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 16, true);
+            this.torchRight.children[i].play('flame');
+        }
+
+        this.torchDown = this.add.group();
+        torchNum = this.map.createFromTiles(68, -1, 'torch', this.item, this.torchDown);
+        for (var i = 0; i < torchNum; i++) {
+            this.torchDown.children[i].rotation = 3.141562;
+            this.torchDown.children[i].anchor.x = 1;
+            this.torchDown.children[i].anchor.y = 0.86;
+            this.torchDown.children[i].animations.add('flame', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 16, true);
+            this.torchDown.children[i].play('flame');
+        }
+
+        this.grass = this.add.group();
+        var grassNum = this.map.createFromTiles(67, -1, 'grass', this.item, this.grass);
+        for (var i = 0; i < grassNum; i++) {
+            this.grass.children[i].animations.add('wave', [0, 1, 2, 3, 4, 5], 16, true);
+            this.grass.children[i].play('wave');
+        }
+
+
+
+        
+        this.treasure = this.add.physicsGroup();
+        this.map.createFromTiles(70, -1, 'treasure', this.item, this.treasure);
+        this.map.createFromTiles(71, -1, 'treasure', this.item, this.treasure);
+
+        this.chest1 = this.treasure.children[0];
+        this.chest2 = this.treasure.children[1];
+        this.chest1.anchor = {type: 25, x: 0, y: -0.2};
+        this.chest2.anchor = {type: 25, x: 0, y: -0.2};
+        this.chest1.animations.add('unlocked', [2, 3, 4, 5], 8, true);
+        this.chest2.animations.add('unlocked', [2, 3, 4, 5], 8, true);
+        this.chest1.name = '1';
+        this.chest2.name = '2';
+
+
         
         this.pills = this.add.physicsGroup();
         this.numPills = this.map.createFromTiles([59, 80], [13, 31], "sword", this.item, this.pills);
@@ -176,7 +252,6 @@ PacmanGame.prototype = {
         
         this.gimeMeExitOrder(this.pinky);
         this.sound.playBgm();
-        console.log("bgm play")
     },
 
     update: function () {
@@ -219,7 +294,7 @@ PacmanGame.prototype = {
                 } else {
                     this.sendScatterOrder();
                 }
-                console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
+                // console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
             }
             if (this.isPaused && this.changeModeTimer < this.time.time) {
                 this.changeModeTimer = this.time.time + this.remainingTime;
@@ -232,7 +307,7 @@ PacmanGame.prototype = {
                 }
                 this.sound.playBgm();
                 this.killCombo = 0;
-                console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
+                // console.log("new mode:", this.TIME_MODES[this.currentMode].mode, this.TIME_MODES[this.currentMode].time);
             }
         }
 
@@ -240,7 +315,7 @@ PacmanGame.prototype = {
         this.updateLife();
 		this.updateGhosts();
         for (var i=0; i< this.ghosts.length; i++)
-            console.log(this.ghosts[i].name, this.ghosts[i].currentDir, this.ghosts[i].mode);
+            // console.log(this.ghosts[i].name, this.ghosts[i].currentDir, this.ghosts[i].mode);
 
         this.checkKeys();
         this.checkMouse();
@@ -439,8 +514,9 @@ PacmanGame.prototype = {
     },
 
     winGame: function() {
+        if (!this.gamewin)
+            this.score += 500;
         this.gameWin = true;
-        this.score += 500;
         this.stopGhosts();
         this.pacman.move(Phaser.NONE);
         this.sound.playLevelComplete();
@@ -475,6 +551,19 @@ PacmanGame.prototype = {
         this.gimeMeExitOrder(this.pinky);
         this.pacman.respawn();
         this.sound.playBgm();
+    },
+
+    unlockChest: function(number) {
+        switch(number) {
+            case 0:
+                this.chest1Unlocked = true;
+                this.chest1.play('unlocked');
+                break;
+            case 1:
+                this.chest2Unlocked = true;
+                this.chest2.play('unlocked');
+                break;
+        }
     }
 };
 
