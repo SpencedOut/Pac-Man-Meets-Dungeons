@@ -78,6 +78,8 @@ var PacmanGame = function (game) {
     
     this.KEY_COOLING_DOWN_TIME = 250;
     this.lastKeyPressed = 0;
+
+    this.isGameOver = false;
     
     this.game = game;
     this.sounds = null;
@@ -514,12 +516,14 @@ PacmanGame.prototype = {
     },
 
     winGame: function() {
-        if (!this.gamewin)
+        if (!this.isGameOver) {
             this.score += 500;
+            this.sound.playLevelComplete();
+            this.isGameOver = true;
+        }
         this.gameWin = true;
         this.stopGhosts();
         this.pacman.move(Phaser.NONE);
-        this.sound.playLevelComplete();
     },
 
     newGame: function() {
