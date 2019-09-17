@@ -96,7 +96,7 @@ Ghost.prototype = {
                     possibleExits.push(q);
                 }
             }
-            // console.log(this.name, possibleExits);
+            console.log(this.name, possibleExits);
             switch (this.mode) {
                 case this.RANDOM:
                     if (this.turnTimer < this.game.time.time) {
@@ -176,6 +176,9 @@ Ghost.prototype = {
                                 if (dist < distanceToObj) {
                                     bestDecision = direction;
                                     distanceToObj = dist;
+                                }
+                                if (this.game.isSpecialTile({x: x, y: y}) && bestDecision === Phaser.DOWN) {
+                                    bestDecision = this.currentDir;
                                 }
                             }
 

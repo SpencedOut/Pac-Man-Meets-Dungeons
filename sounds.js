@@ -79,7 +79,3 @@ Sounds.prototype.clear = function() {
     this.player_pickup_key.destroy();
     this.level_complete.destroy();
 };
-
-Sounds.prototype.playTreasureUnlock = function() {
-    this.treasure_up.play();
-}
