@@ -177,10 +177,12 @@ Pacman.prototype.eatDot = function(pacman, key) {
     if (this.game.numKeys === 3) {
         this.game.treasure.children[0].revive();
         this.game.treasure.children[0].play('unlock');
+        this.game.gameSound.playTreasureUnlock();
     }
     if (this.game.numKeys === 1) {
         this.game.treasure.children[1].revive();
         this.game.treasure.children[1].play('unlock');
+        this.game.gameSound.playTreasureUnlock();
     }
 };
 

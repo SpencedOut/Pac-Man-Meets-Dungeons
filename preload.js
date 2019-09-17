@@ -18,12 +18,14 @@ preload.prototype = {
 		this.game.load.image('sword', 'assets/pickups/sword-big.png');
 		this.game.load.spritesheet('hero', 'assets/hero/elf.png', 32, 32);
 		this.game.load.spritesheet('monster1', 'assets/monsters/Skull_WalkCycle.png', 32, 32);
-		this.game.load.spritesheet('monster2', 'assets/monsters/Skull_WalkCycle.png', 32, 32);
-		this.game.load.spritesheet('monster3', 'assets/monsters/Skull_WalkCycle.png', 32, 32);
-		this.game.load.spritesheet('monster4', 'assets/monsters/Skull_WalkCycle.png', 32, 32);
+		this.game.load.spritesheet('monster2', 'assets/monsters/Skull_WalkCycle-green.png', 32, 32);
+		this.game.load.spritesheet('monster3', 'assets/monsters/Skull_WalkCycle-pink.png', 32, 32);
+		this.game.load.spritesheet('monster4', 'assets/monsters/Skull_WalkCycle-red.png', 32, 32);
 		this.game.load.spritesheet('treasure', 'assets/pickups/treasure.png', 32, 32);
 		this.game.load.spritesheet('torch', 'assets/props/torch.png', 32, 32);
 		this.game.load.spritesheet('grass', 'assets/props/grass.png', 32, 32);
+
+		this.game.load.image('main_menu_bg', 'assets/static_title-tues.png');
 	},
   	create: function() {
 		this.game.state.start("GameTitle");
