@@ -150,14 +150,23 @@ PacmanGame.prototype = {
 
     create: function () {
         this.gameSound.createAllInstances();
+        this.isDoorUnlocked = false;
 
         switch (this.level)
         {
             case 1:
                 this.map = this.add.tilemap('map1');
+                this.item = this.map.createLayer('item');
                 this.map.addTilesetImage('Tile_Level1', 'tiles1');
                 this.layer = this.map.createLayer('ground');
                 this.torch = this.map.createLayer('torch');
+
+                this.door = this.add.group();
+                this.map.createFromTiles(38, -1, 'door1', this.item, this.door);
+                this.door.children[0].animations.add('door-closed', [0], 15, true);
+                this.door.children[0].animations.add('door-opening', [1, 2, 3, 4], 15, false);
+                this.door.children[0].animations.add('door-blinking', [5, 6, 7, 8], 15, true);
+                this.door.children[0].play('door-closed');
 
                 this.torchUp = this.add.group();
                 this.map.createFromTiles(89, -1, 'torch', this.torch, this.torchUp);
@@ -186,6 +195,7 @@ PacmanGame.prototype = {
 
             case 2:
                 this.map = this.add.tilemap('map2');
+                this.item = this.map.createLayer('item');
                 this.map.addTilesetImage('Tile_Level2', 'tiles2');
 
                 this.layer = this.map.createLayer('ground');
@@ -225,6 +235,7 @@ PacmanGame.prototype = {
 
             case 3:
                 this.map = this.add.tilemap('map3');
+                this.item = this.map.createLayer('item');
                 this.map.addTilesetImage('Tile_Level3', 'tiles3');
                 this.layer = this.map.createLayer('ground');
                 /*
@@ -264,7 +275,7 @@ PacmanGame.prototype = {
                 break;
         }
 
-        this.item = this.map.createLayer('item');
+        
         this.keys = this.add.physicsGroup();
         this.map.createFromTiles(2, -1, 'key_yellow', this.item, this.keys);
         this.map.createFromTiles(46, -1, 'key_red', this.item, this.keys);
@@ -381,8 +392,8 @@ PacmanGame.prototype = {
         this.pacman.update();
         this.updateLife();
 		this.updateGhosts();
-        for (var i=0; i< this.ghosts.length; i++)
-            console.log(this.ghosts[i].name, this.ghosts[i].currentDir, this.ghosts[i].mode);
+        // for (var i=0; i< this.ghosts.length; i++)
+        //     console.log(this.ghosts[i].name, this.ghosts[i].currentDir, this.ghosts[i].mode);
 
         this.checkKeys();
         this.checkMouse();
@@ -589,6 +600,7 @@ PacmanGame.prototype = {
         this.stopGhosts();
         this.pacman.move(Phaser.NONE);
         this.gameSound.playLevelComplete();
+        this.door.children[0].play('door-opening');
     },
 
     newGame: function() {

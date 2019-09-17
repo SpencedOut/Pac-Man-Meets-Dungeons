@@ -26,6 +26,7 @@ preload.prototype = {
 		this.game.load.spritesheet('grass', 'assets/props/grass.png', 32, 32);
 
 		this.game.load.image('main_menu_bg', 'assets/static_title-tues.png');
+		this.game.load.spritesheet('door1', 'assets/props/DoorOpen_5f_DoorReady_4f.png', 32, 32);
 	},
   	create: function() {
 		this.game.state.start("GameTitle");

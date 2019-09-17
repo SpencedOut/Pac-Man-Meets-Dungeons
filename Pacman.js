@@ -173,6 +173,13 @@ Pacman.prototype.eatDot = function(pacman, key) {
 
     if (this.game.numKeys > 0)
         this.game.keys.getChildAt(4 - this.game.numKeys).revive();
+    else {
+        if (!this.game.isDoorUnlocked) {
+            this.game.isDoorUnlocked = true;
+            this.game.door.children[0].play('door-blinking');
+        }
+    }
+        
 
     if (this.game.numKeys === 3) {
         this.game.treasure.children[0].revive();

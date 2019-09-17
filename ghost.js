@@ -96,7 +96,7 @@ Ghost.prototype = {
                     possibleExits.push(q);
                 }
             }
-            console.log(this.name, possibleExits);
+            // console.log(this.name, possibleExits);
             switch (this.mode) {
                 case this.RANDOM:
                     if (this.turnTimer < this.game.time.time) {
