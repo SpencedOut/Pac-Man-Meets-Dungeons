@@ -373,8 +373,8 @@ PacmanGame.prototype = {
         this.pacman.update();
         this.updateLife();
 		this.updateGhosts();
-        for (var i=0; i< this.ghosts.length; i++)
-            console.log(this.ghosts[i].name, this.ghosts[i].currentDir, this.ghosts[i].mode);
+        // for (var i=0; i< this.ghosts.length; i++)
+        //     console.log(this.ghosts[i].name, this.ghosts[i].currentDir, this.ghosts[i].mode);
 
         this.checkKeys();
         this.checkMouse();
@@ -513,6 +513,7 @@ PacmanGame.prototype = {
             if (this[ghost.name].mode === this[ghost.name].RANDOM) {
                 this.gameSound.playKillEnemy();
                 this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
+                ghost.play('dead');
                 switch(this.killCombo++) {
                     case 0:
                         this.score += 200;

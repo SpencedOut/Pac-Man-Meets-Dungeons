@@ -49,6 +49,8 @@ var Ghost = function(game, key, name, startPos, startDir, scatterDes, returnDes,
     this.ghost.animations.add("right", [0, 1, 2, 3, 4, 5, 6, 7], 15, true);
     this.ghost.animations.add("frightened left", [24, 25, 26, 27, 28, 29, 30, 31], 15, true);
     this.ghost.animations.add("frightened right", [8, 9, 10, 11, 12, 13, 14, 15], 15, true);
+    this.ghost.animations.add("dead-right", [32, 33, 34, 35, 36, 37, 38, 39], 15, true);
+    this.ghost.animations.add("dead-left", [40, 41, 42, 43, 44, 45, 46, 47], 15, true);
     //this.ghost.play(startDir);
 
     this.game.physics.arcade.enable(this.ghost);
@@ -96,7 +98,7 @@ Ghost.prototype = {
                     possibleExits.push(q);
                 }
             }
-            console.log(this.name, possibleExits);
+            // console.log(this.name, possibleExits);
             switch (this.mode) {
                 case this.RANDOM:
                     if (this.turnTimer < this.game.time.time) {
@@ -532,10 +534,18 @@ Ghost.prototype = {
         } else if (dir === Phaser.DOWN && (this.mode === this.RANDOM || this.mode === this.RETURNING_HOME) && this.lastDirection === Phaser.RIGHT) {
             this.ghost.animations.play("frightened right");
         }
+        
         if (dir === Phaser.LEFT || dir === Phaser.RIGHT) {
             this.ghost.body.velocity.x = speed;
         } else {
             this.ghost.body.velocity.y = speed;
+        }
+
+        if (this.mode === this.RETURNING_HOME) {
+            if (dir === Phaser.RIGHT || dir === Phaser.DOWN)
+                this.ghost.animations.play('dead-right');
+            else if(dir === Phaser.UP || dir === Phaser.LEFT)
+                this.ghost.animations.play('dead-left');
         }
     },
     
