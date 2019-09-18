@@ -153,6 +153,8 @@ PacmanGame.prototype = {
                 this.SPECIAL_TILES = [];
                 break;
         }
+
+        this.isDead = false;
     },
 
     preload: function() {
@@ -161,6 +163,7 @@ PacmanGame.prototype = {
 
     create: function () {
         this.gameSound.createAllInstances();
+        this.isDead = false;
 
         switch (this.level)
         {
@@ -509,7 +512,7 @@ PacmanGame.prototype = {
     },
 
     dogEatsDog: function(pacman, ghost) {
-        if (Phaser.Math.distance(pacman.x, pacman.y, ghost.x, ghost.y) < 20) {
+        if (Phaser.Math.distance(pacman.x, pacman.y, ghost.x, ghost.y) < 24) {
             if (this[ghost.name].mode === this[ghost.name].RANDOM) {
                 this.gameSound.playKillEnemy();
                 this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
@@ -529,8 +532,10 @@ PacmanGame.prototype = {
                         break;
                 }
             } else if (this[ghost.name].mode !== this[ghost.name].RETURNING_HOME) {
-                this.killPacman();
-                this.lastDieTime = this.time.time;
+                if (!this.pacman.isDead) {
+                    this.killPacman();
+                    this.lastDieTime = this.time.time;
+                }
             }
         }
     },
