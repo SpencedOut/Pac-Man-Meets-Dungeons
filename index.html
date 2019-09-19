@@ -3,27 +3,8 @@
 <head>
     <title>Elvish Escape</title>
     <script src="phaser.min.js"></script>
-    <!--
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-    body, html {
-        height: 100%;
-        margin: 0;
-    }
-
-    .bg {
-        background-image: url("assets/5ylZG2o.jpg");
-
-        height: 100%;
-
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-    }
-    </style>
-    -->
 </head>
-<body style="background-image: url('assets/Background.png'); background-repeat:no-repeat; background-size:cover;">
+<body style="background-image: url('assets/Background.png'); background-repeat:no-repeat; background-size:cover; background-position: center;">
     <script src="Pacman.js"></script>
     <script src="ghost.js"></script>
     <script src="sounds.js"></script>
@@ -36,7 +17,7 @@
     <script src="gameover.js"></script>
     <script src="introscreen.js"></script>
     <script src="revenge.js"></script>
-    <!-- <script src="winstate.js"></script> -->
+    <script src="gamewin.js"></script>
     <script>
         (function() {
             var game = new Phaser.Game(544, 608, Phaser.AUTO, "game");
@@ -47,10 +28,10 @@
             game.state.add("TheGame", PacmanGame);
             game.state.add("Revenge", Revenge);
             game.state.add("Bonus", Bonus);
+            game.state.add("GameWin", gameWin);
             game.state.add("GameOver", gameOver);
             game.state.start("Boot");
         }) ();
     </script>
-    <!-- <div class="bg"></div> -->
 </body>
 </html>

@@ -4,11 +4,12 @@ var Bonus = function (game) {
 };
 
 Bonus.prototype = {
-    init: function (score) {
+    init: function (score, result) {
         this.map = null;
         this.layer = null;
 
         this.score = score;
+        this.result = result;
         this.mode = "bonus";
 
         this.pacman = null;
@@ -42,9 +43,8 @@ Bonus.prototype = {
         this.clydeScatterPos = {x:2, y:17};
         this.returnDes = {x:8, y:3};
         this.exitDes = {x:8, y:4};
-        this.safetile = [13, 14, 15, 23, 25, 33, 34, 35, 41, 51, 24, 86, 85];
+        this.safetile = [13, 14, 15, 23, 25, 33, 34, 35, 41, 51, 24, 86, 85, 72, 83];
         this.SPECIAL_TILES = [];
-        this.slashSprite;
     },
 
     preload: function() {
@@ -86,9 +86,6 @@ Bonus.prototype = {
 
         this.map.setCollisionByExclusion(this.safetile, true, this.layer);
 
-        // Our hero
-        this.pacman = new Pacman(this, "hero", this.pacPos);
-
         this.blinky1 = new Ghost(this, "monster1", "blinky", 0, this.blinkyPos[0], Phaser.LEFT, this.blinkyScatterPos, this.returnDes, this.exitDes);
         this.blinky2 = new Ghost(this, "monster1", "blinky", 1, this.blinkyPos[1], Phaser.LEFT, this.blinkyScatterPos, this.returnDes, this.exitDes);
         this.blinky3 = new Ghost(this, "monster1", "blinky", 2, this.blinkyPos[2], Phaser.LEFT, this.blinkyScatterPos, this.returnDes, this.exitDes);
@@ -122,6 +119,27 @@ Bonus.prototype = {
             this.inky1, this.inky2, this.inky3, this.inky4, this.inky5, this.inky6, this.inky7,
             this.clyde1, this.clyde2, this.clyde3, this.clyde4, this.clyde5, this.clyde6, this.clyde7);
 
+        // Our hero
+        this.pacman = new Pacman(this, "hero", this.pacPos);
+
+        this.firework1 = this.game.add.sprite(53, 118, 'firework1', 0);
+        this.firework1.animations.add("fire", [0, 1, 2, 3, 4, 5], 15, true);
+        this.firework1.play("fire");
+        this.firework2 = this.game.add.sprite(337, 140, 'firework2', 0);
+        this.firework2.animations.add("fire", [0, 1, 2, 3, 4, 5], 15, true);
+        this.firework2.play("fire");
+        this.firework3 = this.game.add.sprite(98, 318, 'firework3', 0);
+        this.firework3.animations.add("fire", [0, 1, 2, 3, 4, 5], 15, true);
+        this.firework3.play("fire");
+        this.firework4 = this.game.add.sprite(309, 402, 'firework4', 0);
+        this.firework4.animations.add("fire", [0, 1, 2, 3, 4, 5], 15, true);
+        this.firework4.play("fire");
+
+        this.slashSprite = this.game.add.sprite(8, 13, 'slash');
+        this.slashSprite.animations.add('cut', [0, 1, 2, 3], 12, false);
+        this.slashSprite.anchor.x = 0.5;
+        this.slashSprite.anchor.y = 0.5;
+
         // Score and debug texts
         this.scoreText = this.game.add.text(35, 3, "Score: " + this.score, { fontSize: "24px", fill: "#fff" });
         this.winText = this.game.add.text(190, 140, "", { fontSize: "36px", fill: "#fff" });
@@ -133,11 +151,6 @@ Bonus.prototype = {
         this.cursors["r"] = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 
         this.startTime = this.time.time;
-
-        this.slashSprite = this.game.add.sprite(8, 13, 'slash');
-        this.slashSprite.animations.add('cut', [0, 1, 2, 3], 12, false);
-        this.slashSprite.anchor.x = 0.5;
-        this.slashSprite.anchor.y = 0.5;
     },
 
     update: function () {
@@ -172,7 +185,7 @@ Bonus.prototype = {
             }
         }
 
-        if (this.time.time > this.startTime + 30000 && this.bonusComplete === false && this.gameOver === false)
+        if (this.time.time > this.startTime + 26000 && this.bonusComplete === false && this.gameOver === false)
         {
             this.pacman.move(Phaser.NONE);
             this.pacman.sprite.play("dance");
@@ -186,7 +199,12 @@ Bonus.prototype = {
         if ((this.gameOver === true || this.gameWin === true) && this.cursors.r.isDown)
         {
             this.gameSound.clear();
-            this.game.state.start("GameOver", true, false, this.score);
+            if (this.result === "lose") {
+                this.game.state.start("GameOver", true, false, this.score);
+            }
+            if (this.result === "win") {
+                this.game.state.start("GameWin", true, false, this.score);
+            }
         }
 
         // console.log(this.killCombo);
