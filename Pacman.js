@@ -287,12 +287,12 @@ Pacman.prototype.checkSafetile = function(tileIndex) {
 };
 
 Pacman.prototype.respawn = function () {
-    this.move(Phaser.LEFT);
     this.isDead = false;
     this.sprite.x = this.startPos.x * this.gridsize + this.gridsize/2;
     this.sprite.y = this.startPos.y * this.gridsize + this.gridsize/2;
     this.sprite.body.reset(this.sprite.x, this.sprite.y);
     this.sprite.play('munch');
+    this.move(Phaser.LEFT);
 };
 
 Pacman.prototype.unlockTreasure = function (treasure) {

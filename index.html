@@ -11,21 +11,21 @@
     <script src="pacmangame.js"></script>
     <script src="sounds.js"></script>
     <script src="preload.js"></script>
-    <script src="introscreen.js"></script>
     <script src="gametitle.js"></script>
     <script src="boot.js"></script>
     <script src="bonus.js"></script>
     <script src="gameover.js"></script>
+    <script src="introscreen.js"></script>
     <script>
         (function() {
             var game = new Phaser.Game(544, 608, Phaser.AUTO, "game");
             game.state.add("Boot", boot);
             game.state.add("Preload", preload);
             game.state.add("GameTitle", gameTitle);
+            game.state.add("IntroScreen", introScreen);
             game.state.add("TheGame", PacmanGame);
             game.state.add("Bonus", Bonus);
             game.state.add("GameOver", gameOver);
-            game.state.add("IntroScreen", introScreen);
             game.state.start("Boot");
         }) ();
     </script>

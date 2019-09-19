@@ -13,7 +13,7 @@ PacmanGame.prototype = {
         this.numKeys = 4;
         this.mode = "normal";
         this.TOTAL_KEYS = 0;
-        if (level > 1) {
+        if (level >= 1) {
             this.level = level;
         }
         if (this.level > 1)
@@ -112,11 +112,11 @@ PacmanGame.prototype = {
 
             case 2:
                 this.pacPos = {x:8, y:13};
-                this.ghostSpeed = 112;
-                this.ghostScatterSpeed = 105;
-                this.ghostFrightenedSpeed = 75;
-                this.cruiseSpeed = 120;
-                this.ElroySpeed = 128;
+                this.ghostSpeed = 128;
+                this.ghostScatterSpeed = 120;
+                this.ghostFrightenedSpeed = 85;
+                this.cruiseSpeed = 135;
+                this.ElroySpeed = 140;
                 this.goalPos = {x: 8, y:11};
                 this.blinkyPos = {x:8, y:3};
                 this.blinkyScatterPos = {x:2, y:1};
@@ -134,11 +134,11 @@ PacmanGame.prototype = {
 
             case 3:
                 this.pacPos = {x:8, y:10};
-                this.ghostSpeed = 112;
-                this.ghostScatterSpeed = 105;
-                this.ghostFrightenedSpeed = 75;
-                this.cruiseSpeed = 120;
-                this.ElroySpeed = 128;
+                this.ghostSpeed = 135;
+                this.ghostScatterSpeed = 130;
+                this.ghostFrightenedSpeed = 90;
+                this.cruiseSpeed = 150;
+                this.ElroySpeed = 158;
                 this.goalPos = {x:8, y:1};
                 this.blinkyPos = {x:8, y:15};
                 this.blinkyScatterPos = {x:1, y:1};
@@ -154,8 +154,6 @@ PacmanGame.prototype = {
                 this.SPECIAL_TILES = [];
                 break;
         }
-
-        this.isDead = false;
     },
 
     preload: function() {
@@ -164,7 +162,6 @@ PacmanGame.prototype = {
 
     create: function () {
         this.gameSound.createAllInstances();
-        this.isDead = false;
 
         switch (this.level)
         {
@@ -411,9 +408,8 @@ PacmanGame.prototype = {
         {
             if (this.level < 3)
             {
-                // var level = this.level++;
                 this.gameSound.clear();
-                this.game.state.restart(true, false, this.score, this.life, this.level++);
+                this.game.state.restart(true, false, this.score, this.life, this.level + 1);
             }
             else if (this.level === 3)
             {
@@ -527,7 +523,7 @@ PacmanGame.prototype = {
     },
 
     dogEatsDog: function(pacman, ghost) {
-        if (Phaser.Math.distance(pacman.x, pacman.y, ghost.x, ghost.y) < 24) {
+        if (Phaser.Math.distance(pacman.x, pacman.y, ghost.x, ghost.y) < 20) {
             if (this[ghost.name].mode === this[ghost.name].RANDOM) {
                 this.gameSound.playKillEnemy();
                 this[ghost.name].mode = this[ghost.name].RETURNING_HOME;
@@ -546,10 +542,8 @@ PacmanGame.prototype = {
                         break;
                 }
             } else if (this[ghost.name].mode !== this[ghost.name].RETURNING_HOME) {
-                if (!this.pacman.isDead) {
-                    this.killPacman();
-                    this.lastDieTime = this.time.time;
-                }
+                this.killPacman();
+                this.lastDieTime = this.time.time;
             }
         }
     },
