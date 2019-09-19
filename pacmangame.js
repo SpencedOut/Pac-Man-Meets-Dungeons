@@ -82,6 +82,7 @@ PacmanGame.prototype = {
         this.DEBUG_ON = false;
         this.KEY_COOLING_DOWN_TIME = 250;
         this.lastKeyPressed = 0;
+        this.slashSprite;
 
         switch (this.level)
         {
@@ -285,17 +286,20 @@ PacmanGame.prototype = {
         this.map.setCollisionByExclusion(this.safetile, true, this.layer);
         this.map.setCollisionByExclusion([38], true, this.item);
 
-		// Our hero
-        this.pacman = new Pacman(this, "hero", this.pacPos);
-        for (var i =  0; i < this.life; i++) {
-            this.livesImage.push(this.add.image(448 + (i * 32), 575, 'lifecounter'));
-        }
+		
 
         this.blinky = new Ghost(this, "monster1", "blinky", 0, this.blinkyPos, Phaser.LEFT, this.blinkyScatterPos, this.returnDes, this.exitDes);
         this.pinky = new Ghost(this, "monster2", "pinky", 1, this.pinkyPos, Phaser.RIGHT, this.pinkyScatterPos, this.returnDes, this.exitDes);
         this.inky = new Ghost(this, "monster3", "inky", 2, this.inkyPos, Phaser.RIGHT, this.inkyScatterPos, this.returnDes, this.exitDes);
         this.clyde = new Ghost(this, "monster4", "clyde", 3, this.clydePos, Phaser.LEFT, this.clydeScatterPos, this.returnDes, this.exitDes);
         this.ghosts.push(this.blinky, this.pinky, this.inky, this.clyde);
+
+        
+        // Our hero
+        this.pacman = new Pacman(this, "hero", this.pacPos);
+        for (var i =  0; i < this.life; i++) {
+            this.livesImage.push(this.add.image(448 + (i * 32), 575, 'lifecounter'));
+        }
 
         // Score and debug texts
         this.scoreText = this.game.add.text(35, 3, "Score: " + this.score, { fontSize: "24px", fill: "#fff" });
@@ -312,6 +316,11 @@ PacmanGame.prototype = {
         this.changeModeTimer = this.time.time + this.TIME_MODES[this.currentMode].time;
         this.gimeMeExitOrder(this.pinky);
         this.gameSound.playBgm();
+
+        this.slashSprite = this.game.add.sprite(8, 13, 'slash');
+        this.slashSprite.animations.add('cut', [0, 1, 2, 3], 9, false);
+        this.slashSprite.anchor.x = 0.5;
+        this.slashSprite.anchor.y = 0.5;
     },
 
     update: function () {
@@ -541,6 +550,7 @@ PacmanGame.prototype = {
                         this.score += 1600;
                         break;
                 }
+                this.playSlashAnimation(ghost.x, ghost.y);
             } else if (this[ghost.name].mode !== this[ghost.name].RETURNING_HOME) {
                 this.killPacman();
                 this.lastDieTime = this.time.time;
@@ -607,4 +617,10 @@ PacmanGame.prototype = {
         }
         return false;
     },
+
+    playSlashAnimation: function(posX, posY) {
+        this.slashSprite.x = posX;
+        this.slashSprite.y = posY;
+        this.slashSprite.play('cut');
+    }
 };
