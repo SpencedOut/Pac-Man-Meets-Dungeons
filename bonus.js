@@ -44,6 +44,7 @@ Bonus.prototype = {
         this.exitDes = {x:8, y:4};
         this.safetile = [13, 14, 15, 23, 25, 33, 34, 35, 41, 51, 24, 86, 85];
         this.SPECIAL_TILES = [];
+        this.slashSprite;
     },
 
     preload: function() {
@@ -132,6 +133,11 @@ Bonus.prototype = {
         this.cursors["r"] = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
 
         this.startTime = this.time.time;
+
+        this.slashSprite = this.game.add.sprite(8, 13, 'slash');
+        this.slashSprite.animations.add('cut', [0, 1, 2, 3], 9, false);
+        this.slashSprite.anchor.x = 0.5;
+        this.slashSprite.anchor.y = 0.5;
     },
 
     update: function () {
@@ -340,6 +346,7 @@ Bonus.prototype = {
                         this.score += 1600;
                         break;
                 }
+                this.playSlashAnimation(ghost.x, ghost.y);
             } else if (this.ghosts[ghost.index].mode !== "returning_home") {
                 this.killPacman();
             }
@@ -374,4 +381,10 @@ Bonus.prototype = {
             this.ghosts[i].mode = this.ghosts[i].STOP;
         }
     },
+
+    playSlashAnimation: function(posX, posY) {
+        this.slashSprite.x = posX;
+        this.slashSprite.y = posY;
+        this.slashSprite.play('cut');
+    }
 };
