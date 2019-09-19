@@ -49,8 +49,6 @@ Sounds.prototype.playPlayerDeath = function() {
         this.bgm_attack.stop();
     if (this.bgm.isPlaying)
         this.bgm.stop();
-    if (this.bonus.isPlaying)
-        this.bonus.stop();
     this.player_death.play();
 };
 
@@ -70,10 +68,6 @@ Sounds.prototype.playTreasureReveal = function() {
 
 Sounds.prototype.playTreasurePick = function() {
     this.treasure_pick.play();
-};
-
-Sounds.prototype.playBonusBgm = function() {
-    this.bonus.play();
 };
 
 Sounds.prototype.clear = function() {
