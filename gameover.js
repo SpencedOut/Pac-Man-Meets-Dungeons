@@ -11,8 +11,8 @@ gameOver.prototype = {
         this.map = this.add.tilemap('lose');
         this.map.addTilesetImage('Tile_Level1', 'tiles1');
         this.layer = this.map.createLayer('ground');
-        this.torch = this.map.createLayer('torch');
         this.sprites = this.map.createLayer('sprites');
+        this.torch = this.map.createLayer('torch');
 
         this.torchUp = this.add.group();
         this.map.createFromTiles(89, -1, 'torch', this.torch, this.torchUp);
