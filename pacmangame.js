@@ -619,6 +619,7 @@ PacmanGame.prototype = {
     },
 
     playSlashAnimation: function(posX, posY) {
+        this.slashSprite.animations.stop();
         this.slashSprite.x = posX;
         this.slashSprite.y = posY;
         this.slashSprite.play('cut');

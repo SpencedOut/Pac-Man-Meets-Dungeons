@@ -135,7 +135,7 @@ Bonus.prototype = {
         this.startTime = this.time.time;
 
         this.slashSprite = this.game.add.sprite(8, 13, 'slash');
-        this.slashSprite.animations.add('cut', [0, 1, 2, 3], 9, false);
+        this.slashSprite.animations.add('cut', [0, 1, 2, 3], 12, false);
         this.slashSprite.anchor.x = 0.5;
         this.slashSprite.anchor.y = 0.5;
     },
@@ -383,6 +383,7 @@ Bonus.prototype = {
     },
 
     playSlashAnimation: function(posX, posY) {
+        this.slashSprite.animations.stop();
         this.slashSprite.x = posX;
         this.slashSprite.y = posY;
         this.slashSprite.play('cut');
