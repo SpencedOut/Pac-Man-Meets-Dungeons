@@ -1,6 +1,5 @@
 var Bonus = function (game) {
     this.game = game;
-    this.gameSound = new Sounds(this);
 };
 
 Bonus.prototype = {
@@ -25,40 +24,34 @@ Bonus.prototype = {
         this.KEY_COOLING_DOWN_TIME = 250;
         this.lastKeyPressed = 0;
 
-        this.pacPos = {x:8, y:17};
+        this.pacPos = {x:8, y:6};
         this.ghostSpeed = 150;
         this.ghostScatterSpeed = 135;
         this.ghostFrightenedSpeed = 95;
         this.cruiseSpeed = 150;
         this.ElroySpeed = 158;
         this.goalPos = {x:8, y:11};
-        this.blinkyPos = [{x:2, y:1}, {x:14, y:1}, {x:4, y:8}, {x:12, y:8}, {x:8, y:11}, {x:2, y:17}, {x:14, y:17}];
+        this.blinkyPos = [{x:4, y:4}, {x:12, y:4}, {x:3, y:9}, {x:14, y:11}, {x:8, y:12}, {x:13, y:13}, {x:3, y:15}];
         this.blinkyScatterPos = {x:2, y:1};
-        this.pinkyPos = [{x:8, y:3}, {x:2, y:5}, {x:14, y:5}, {x:8, y:9}, {x:10, y:9}, {x:2, y:13}, {x:14, y:13}];
+        this.pinkyPos = [{x:2, y:1}, {x:14, y:1}, {x:1, y:13}, {x:4, y:13}, {x:15, y:13}, {x:5, y:17}, {x:13, y:17}];
         this.pinkyScatterPos = {x:14, y:1};
-        this.inkyPos = [{x:6, y:5}, {x:10, y:5}, {x:6, y:13}, {x:8, y:13}, {x:10, y:13}, {x:5, y:16}, {x:11, y:16}];
+        this.inkyPos = [{x:1, y:3}, {x:15, y:3}, {x:7, y:4}, {x:9, y:4}, {x:5, y:10}, {x:11, y:10}, {x:8, y:15}];
         this.inkyScatterPos = {x:14, y:17};
-        this.clydePos = [{x:1, y:7}, {x:15, y:7}, {x:6, y:9}, {x:1, y:11}, {x:4, y:11}, {x:12, y:11}, {x:15, y:11}];
+        this.clydePos = [{x:1, y:6}, {x:5, y:6}, {x:11, y:6}, {x:2, y:11}, {x:1, y:16}, {x:15, y:16}, {x:8, y:8}];
         this.clydeScatterPos = {x:2, y:17};
-        this.returnDes = {x:8, y:1};
-        this.exitDes = {x:8, y:3};
-        this.safetile = [14, 51, 41, 24, 86, 85, 23, 25, 34, 72];
+        this.returnDes = {x:8, y:3};
+        this.exitDes = {x:8, y:4};
+        this.safetile = [13, 14, 15, 23, 25, 33, 34, 35, 41, 51, 24, 86, 85, 72];
         this.SPECIAL_TILES = [];
     },
 
-    preload: function() {
-        this.gameSound.loadAllSounds();
-    },
-
     create: function () {
-        this.gameSound.createAllInstances();
-        this.gameSound.playBonusBgm();
+        this.game.gameSound.playBonusBgm();
 
-        this.map = this.add.tilemap('map2');
-        this.map.addTilesetImage('Tile_Level2', 'tiles2');
+        this.map = this.add.tilemap('map4');
+        this.map.addTilesetImage('Tile_Level4', 'tiles4');
 
         this.layer = this.map.createLayer('ground');
-        this.grass = this.map.createLayer('grass');
         this.torch = this.map.createLayer('torch');
 
         this.torchUp = this.add.group();
@@ -84,12 +77,6 @@ Bonus.prototype = {
         this.torchRight.forEach(function(child) {
             child.animations.add('flame', [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], 15, true);
             child.play('flame');}, this);
-
-        this.grasses = this.add.group();
-        this.map.createFromTiles(90, -1, 'grass', this.grass, this.grasses);
-        this.grasses.forEach(function(child) {
-            child.animations.add('wave', [0, 1, 2, 3, 4, 5], 15, true);
-            child.play('wave');}, this);
 
         this.map.setCollisionByExclusion(this.safetile, true, this.layer);
 
@@ -182,12 +169,12 @@ Bonus.prototype = {
             this.gameWin = true;
             this.score += 1000;
             this.bonusComplete = true;
-            this.gameSound.playLevelComplete();
+            this.game.gameSound.playLevelComplete();
         }
 
         if ((this.gameOver === true || this.gameWin === true) && this.cursors.r.isDown)
         {
-            this.gameSound.clear();
+            this.game.gameSound.clear();
             this.game.state.start("GameOver", true, false, this.score);
         }
 
@@ -259,7 +246,7 @@ Bonus.prototype = {
     dogEatsDog: function(pacman, ghost) {
         if (Phaser.Math.distance(pacman.x, pacman.y, ghost.x, ghost.y) < 20) {
             if (this.ghosts[ghost.index].mode === "random") {
-                this.gameSound.playKillEnemy();
+                this.game.gameSound.playKillEnemy();
                 this.ghosts[ghost.index].mode = "returning_home";
 
                 switch(this.killCombo++) {
@@ -355,13 +342,13 @@ Bonus.prototype = {
     },
 
     gimeMeExitOrder: function(ghost) {
-        this.game.time.events.add(20000, this.sendExitOrder, this, ghost);
+        this.game.time.events.add(17000, this.sendExitOrder, this, ghost);
     },
 
     killPacman: function() {
         this.pacman.isDead = true;
         this.stopGhosts();
-        this.gameSound.playPlayerDeath();
+        this.game.gameSound.playPlayerDeath();
         this.gameOver = true;
     },
 

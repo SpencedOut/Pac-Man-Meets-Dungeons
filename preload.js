@@ -12,6 +12,8 @@ preload.prototype = {
 		this.game.load.tilemap('map2', 'assets/levels/level2.json', null, Phaser.Tilemap.TILED_JSON);
 		this.game.load.image('tiles3', 'assets/levels/Tile_Level3.png');
 		this.game.load.tilemap('map3', 'assets/levels/level3.json', null, Phaser.Tilemap.TILED_JSON);
+        this.game.load.image('tiles4', 'assets/levels/Tile_Level4.png');
+        this.game.load.tilemap('map4', 'assets/levels/level4.json', null, Phaser.Tilemap.TILED_JSON);
 		this.game.load.image("lifecounter", "assets/heart32.png");
 		this.game.load.spritesheet('key_yellow', 'assets/pickups/yellow-key-sparkle.png', 32, 32);
 		this.game.load.spritesheet('key_red', 'assets/pickups/red-key-sparkle.png', 32, 32);
@@ -28,6 +30,7 @@ preload.prototype = {
 		this.game.load.spritesheet('grass', 'assets/props/grass.png', 32, 32);
         this.game.load.spritesheet('grass1', 'assets/props/grass_forest.png', 32, 32);
 		this.game.load.spritesheet('door', 'assets/props/DoorOpen_5f_DoorReady_4f.png', 32, 32);
+		this.game.load.spritesheet('revenge', 'assets/revenge.png', 845, 119);
 	},
   	create: function() {
 		this.game.state.start("GameTitle");
